@@ -132,12 +132,13 @@ public sealed class AccountController : Controller
         switch (username.ToLowerInvariant())
         {
             case "admin":
+            case "superadmin":
             case "sahand":
                 if (password == "Sahand@123" || password == "admin123" || password == "Faradid@2026")
                 {
                     isValid = true;
-                    username = "admin";
-                    displayName = "مدیر کل راهکار الکترونیک سهند";
+                    username = "superadmin";
+                    displayName = "ابر مدیر سیستم احراز هویت سهند";
                     email = "admin@irres.ir";
                     assignedRole = "Admin";
                 }

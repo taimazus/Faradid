@@ -178,17 +178,27 @@ public sealed class CentralAuthClient : ICentralAuthClient
                 }
             }
 
-            // Default roles if empty
-            if (rolesList.Count == 0)
+            // Check if user is an administrator (including superadmin from auth.irres.ir)
+            var isSuperAdmin = username.Equals("superadmin", StringComparison.OrdinalIgnoreCase) ||
+                               username.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+                               username.Contains("admin", StringComparison.OrdinalIgnoreCase) ||
+                               fullName.Contains("ابر مدیر") ||
+                               fullName.Contains("مدیر کل") ||
+                               fullName.Contains("مدیر سیستم") ||
+                               email.Equals("admin@irres.ir", StringComparison.OrdinalIgnoreCase) ||
+                               email.StartsWith("admin@", StringComparison.OrdinalIgnoreCase) ||
+                               email.StartsWith("superadmin@", StringComparison.OrdinalIgnoreCase) ||
+                               rolesList.Any(r => r.Contains("admin", StringComparison.OrdinalIgnoreCase) || r.Contains("مدیر"));
+
+            if (isSuperAdmin)
             {
-                if (email.Equals("admin@irres.ir", StringComparison.OrdinalIgnoreCase) || username.Equals("admin", StringComparison.OrdinalIgnoreCase))
-                {
-                    rolesList.Add("Admin");
-                }
-                else
-                {
-                    rolesList.Add("Client");
-                }
+                if (!rolesList.Contains("Admin")) rolesList.Add("Admin");
+                if (!rolesList.Contains("SuperAdmin")) rolesList.Add("SuperAdmin");
+                if (!rolesList.Contains("SeoSpecialist")) rolesList.Add("SeoSpecialist");
+            }
+            else if (rolesList.Count == 0)
+            {
+                rolesList.Add("Client");
             }
 
             var profile = new CentralAuthUserProfile(

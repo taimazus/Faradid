@@ -12,21 +12,46 @@ public static class UserAccessHelper
     {
         if (user?.Identity?.IsAuthenticated != true) return false;
 
-        if (user.IsInRole("Admin") || user.IsInRole("SeoSpecialist")) return true;
+        // Check Roles (Admin, SuperAdmin, SeoSpecialist, etc.)
+        if (user.IsInRole("Admin") ||
+            user.IsInRole("SuperAdmin") ||
+            user.IsInRole("superadmin") ||
+            user.IsInRole("Administrator") ||
+            user.IsInRole("SeoSpecialist") ||
+            user.IsInRole("IrresAdmin") ||
+            user.Claims.Any(c => c.Type == ClaimTypes.Role &&
+                (c.Value.Equals("SuperAdmin", StringComparison.OrdinalIgnoreCase) ||
+                 c.Value.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                 c.Value.Equals("Administrator", StringComparison.OrdinalIgnoreCase) ||
+                 c.Value.Contains("ابر مدیر", StringComparison.OrdinalIgnoreCase))))
+        {
+            return true;
+        }
 
         var email = user.FindFirst(ClaimTypes.Email)?.Value;
-        if (!string.IsNullOrWhiteSpace(email) && email.Equals("admin@irres.ir", StringComparison.OrdinalIgnoreCase)) return true;
+        if (!string.IsNullOrWhiteSpace(email) &&
+            (email.Equals("admin@irres.ir", StringComparison.OrdinalIgnoreCase) ||
+             email.StartsWith("admin@", StringComparison.OrdinalIgnoreCase) ||
+             email.StartsWith("superadmin@", StringComparison.OrdinalIgnoreCase)))
+        {
+            return true;
+        }
 
         var username = user.FindFirst("Username")?.Value ?? string.Empty;
         if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-            username.Equals("sahand", StringComparison.OrdinalIgnoreCase))
+            username.Equals("superadmin", StringComparison.OrdinalIgnoreCase) ||
+            username.Equals("sahand", StringComparison.OrdinalIgnoreCase) ||
+            username.Contains("admin", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
         var name = user.Identity.Name ?? string.Empty;
         if (name.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-            name.Equals("مدیر کل راهکار الکترونیک سهند", StringComparison.OrdinalIgnoreCase))
+            name.Equals("superadmin", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("ابر مدیر", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("مدیر کل", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("مدیر سیستم", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

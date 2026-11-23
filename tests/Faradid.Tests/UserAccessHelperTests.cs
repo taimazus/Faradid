@@ -90,4 +90,25 @@ public sealed class UserAccessHelperTests
         Assert.Single(filtered);
         Assert.Equal("yonarak.ir", filtered[0].Domain);
     }
+
+    [Fact]
+    public void SuperAdminUser_FromIrresGate_CanAccessAllProjects()
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, "ابر مدیر سیستم احراز هویت سهند"),
+            new Claim(ClaimTypes.Role, "SuperAdmin"),
+            new Claim(ClaimTypes.Email, "superadmin@irres.ir"),
+            new Claim("Username", "superadmin")
+        };
+        var superAdmin = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        Assert.True(UserAccessHelper.IsAdmin(superAdmin));
+        Assert.True(UserAccessHelper.CanAccessProject(superAdmin, _sampleProjects[0]));
+        Assert.True(UserAccessHelper.CanAccessProject(superAdmin, _sampleProjects[1]));
+        Assert.True(UserAccessHelper.CanAccessProject(superAdmin, _sampleProjects[2]));
+
+        var filtered = UserAccessHelper.FilterProjects(superAdmin, _sampleProjects);
+        Assert.Equal(3, filtered.Count);
+    }
 }
