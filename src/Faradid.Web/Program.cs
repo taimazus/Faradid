@@ -52,6 +52,14 @@ builder.Services.AddSingleton<ScheduledReportBackgroundService>();
 builder.Services.AddSingleton<IScheduledReportService>(sp => sp.GetRequiredService<ScheduledReportBackgroundService>());
 builder.Services.AddHostedService(sp => sp.GetRequiredService<ScheduledReportBackgroundService>());
 
+// Phase 3 & 4: SEO Alarm Engine & AI Article Full Generator
+builder.Services.AddSingleton<ISeoAlarmEngine, SeoAlarmEngine>();
+builder.Services.AddScoped<IAiArticleWriter, AiArticleWriter>();
+
+// Phase 5 & 7: Lightweight Online Site Crawler & Tabriz Local SERP Tracker
+builder.Services.AddHttpClient<ISiteCrawlerService, SiteCrawlerService>();
+builder.Services.AddSingleton<ILocalRankTrackerService, LocalRankTrackerService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

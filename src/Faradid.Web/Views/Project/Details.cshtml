@@ -2,6 +2,10 @@
 @{
     ViewData["Title"] = $"دیده‌بانی {Model.Name} ({Model.Domain})";
     var reports = ViewBag.Reports as IReadOnlyList<FaradidMasterReport> ?? Array.Empty<FaradidMasterReport>();
+    var localRanks = ViewBag.LocalRanks as Faradid.Core.Models.LocalRankTrackingSummary;
+    var crawlResult = ViewBag.CrawlResult as Faradid.Core.Models.SiteCrawlResult;
+    var alarms = ViewBag.ActiveAlarms as IReadOnlyList<Faradid.Core.Models.SeoAlertLog> ?? Array.Empty<Faradid.Core.Models.SeoAlertLog>();
+    var unackAlarms = alarms.Where(a => !a.IsAcknowledged).ToList();
 }
 
 <div class="container-fluid px-lg-5 py-4">
@@ -14,9 +18,57 @@
             <p class="text-secondary small mb-0 mt-1">کارفرما: @Model.ClientName | صنعت: @Model.Industry</p>
         </div>
         <div class="d-flex gap-2">
+            <a href="/ClientPortal/@Model.Id" target="_blank" class="btn btn-outline-info d-flex align-items-center gap-2">
+                <span>🌐 پورتال اختصاصی کارفرما (White-label)</span>
+            </a>
             <a asp-action="Index" class="btn btn-faradid-outline">بازگشت به فهرست پروژه‌ها</a>
         </div>
     </div>
+
+    <!-- Active SEO Alarms Banner -->
+    @if (unackAlarms.Count > 0)
+    {
+        <div class="card-faradid p-4 mb-4" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.05)); border: 1px solid rgba(239, 68, 68, 0.3);">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4">🔔</span>
+                    <h5 class="fw-bold mb-0 text-white">هشدارهای فعال موتور سئو (SeoAlarmEngine)</h5>
+                    <span class="badge bg-danger">@unackAlarms.Count مورد نیازمند توجه</span>
+                </div>
+            </div>
+            <div class="row g-3">
+                @foreach (var alert in unackAlarms)
+                {
+                    <div class="col-lg-6" id="alarm-card-@alert.Id">
+                        <div class="p-3 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.7); border: 1px solid @(alert.Severity == Faradid.Core.Models.SeoAlertSeverity.Critical ? "rgba(239, 68, 68, 0.4)" : "rgba(245, 158, 11, 0.4)");">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    @if (alert.Severity == Faradid.Core.Models.SeoAlertSeverity.Critical)
+                                    {
+                                        <span class="badge bg-danger">بحرانی</span>
+                                    }
+                                    else if (alert.Severity == Faradid.Core.Models.SeoAlertSeverity.Warning)
+                                    {
+                                        <span class="badge bg-warning text-dark">هشدار</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info text-dark">اطلاعیه</span>
+                                    }
+                                    <strong class="text-white small">@alert.Title</strong>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 text-white-50" style="font-size: 11px;" onclick="ackAlarm('@alert.Id')">
+                                    ✓ رفع هشدار
+                                </button>
+                            </div>
+                            <p class="small text-white-50 mb-2">@alert.Message</p>
+                            <div class="small text-info"><strong>دستورکار:</strong> @alert.RecommendedAction</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
     <div class="row g-4 mb-4">
         <!-- Project Summary Card -->
@@ -137,6 +189,154 @@
         </div>
     </div>
 
+    <!-- Local SERP & Tabriz Maps Tracker (Phase 7) & Site Crawler (Phase 5) -->
+    <div class="row g-4 mb-4">
+        <!-- Local SERP Card -->
+        <div class="col-lg-7">
+            <div class="card-faradid p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 border-end border-3 border-info pe-2">📍 ردیاب رتبه‌های محلی تبریز و نقشه گوگل (Local SERP)</h5>
+                        <p class="text-secondary small mb-0">دیده‌بانی جایگاه عبارات تجاری و بسته‌های نقشه گوگل در حوزه شمال‌غرب</p>
+                    </div>
+                    @if (localRanks != null)
+                    {
+                        <span class="badge bg-primary px-3 py-2">دیده‌شدن محلی: @localRanks.OverallLocalVisibilityScore٪</span>
+                    }
+                </div>
+
+                @if (localRanks != null && localRanks.Keywords.Count > 0)
+                {
+                    <div class="table-responsive mb-3">
+                        <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent; font-size: 13px;">
+                            <thead>
+                                <tr class="text-secondary small border-bottom border-secondary">
+                                    <th>کلیدواژه محلی</th>
+                                    <th>رتبه فعلی</th>
+                                    <th>تغییر دوره</th>
+                                    <th>نقشه گوگل (Maps)</th>
+                                    <th>حجم جستجو</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var kw in localRanks.Keywords)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-light">@kw.Keyword</td>
+                                        <td>
+                                            <span class="badge bg-success fs-6">@kw.CurrentRank.ToString("0.1")</span>
+                                        </td>
+                                        <td>
+                                            @if (kw.Change > 0)
+                                            {
+                                                <span class="text-success fw-bold">▲ @kw.Change.ToString("0.1") ارتقا</span>
+                                            }
+                                            else if (kw.Change < 0)
+                                            {
+                                                <span class="text-danger fw-bold">▼ @Math.Abs(kw.Change).ToString("0.1") افت</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary">➖ پایدار</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (kw.IsInGoogleMapsPack)
+                                            {
+                                                <span class="badge bg-info text-dark">📌 جایگاه @(kw.MapsPosition ?? 1) در Google Maps</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-secondary small">—</span>
+                                            }
+                                        </td>
+                                        <td class="text-secondary">@kw.SearchVolume.ToString("N0")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                <!-- Add Keyword Form -->
+                <form asp-action="AddLocalKeyword" method="post" class="d-flex gap-2 mt-auto pt-2 border-top border-secondary">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="projectId" value="@Model.Id" />
+                    <input type="text" name="keyword" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="افزودن کلیدواژه جدید برای پایش در تبریز..." required />
+                    <input type="hidden" name="city" value="تبریز" />
+                    <button type="submit" class="btn btn-sm btn-outline-info text-nowrap">+ افزودن</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Site Crawler Card -->
+        <div class="col-lg-5">
+            <div class="card-faradid p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 border-end border-3 border-success pe-2">🔍 خزشگر آنلاین وب‌سایت (Site Crawler)</h5>
+                        <p class="text-secondary small mb-0">بررسی زنده لینک‌های شکسته، متاتگ‌ها و Alt تصاویر</p>
+                    </div>
+                    <form asp-action="RunSiteCrawl" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-sm btn-outline-success">🚀 خزش زنده</button>
+                    </form>
+                </div>
+
+                @if (crawlResult != null)
+                {
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-dark border border-secondary">
+                                <div class="small text-secondary">نمره سلامت آن‌پیج</div>
+                                <div class="fw-bold fs-4 text-success">@crawlResult.OverallHealthScore / ۱۰۰</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-dark border border-secondary">
+                                <div class="small text-secondary">صفحات بررسی‌شده</div>
+                                <div class="fw-bold fs-4 text-light">@crawlResult.TotalPagesCrawled</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-dark border border-secondary">
+                                <div class="small text-secondary">لینک‌های شکسته (۴۰۴)</div>
+                                <div class="fw-bold fs-5 @(crawlResult.BrokenLinksCount > 0 ? "text-danger" : "text-success")">@crawlResult.BrokenLinksCount</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded bg-dark border border-secondary">
+                                <div class="small text-secondary">تصاویر بدون Alt</div>
+                                <div class="fw-bold fs-5 @(crawlResult.MissingAltCount > 0 ? "text-warning" : "text-success")">@crawlResult.MissingAltCount</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="small text-info fw-bold mb-2">اقدامات اولویت‌دار خزشگر:</h6>
+                    <ul class="small text-white-50 ps-3 mb-0">
+                        @foreach (var act in crawlResult.ActionItems.Take(3))
+                        {
+                            <li class="mb-1">@act</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-secondary">
+                        <div class="fs-2 mb-2">🕷️</div>
+                        <p class="small mb-2">هنوز خزش آنلاینی برای این دامنه ثبت نشده است.</p>
+                        <form asp-action="RunSiteCrawl" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-success">🚀 شروع اولین خزش زنده آنلاین</button>
+                        </form>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
     <!-- Past Reports History -->
     <div class="card-faradid p-4">
         <h5 class="fw-bold mb-3 border-end border-3 border-danger pe-2">تاریخچه کارنامه‌های صادرشده برای @Model.Domain</h5>
@@ -205,5 +405,23 @@
                 csvGroup.style.display = 'none';
             }
         });
+
+        function ackAlarm(alarmId) {
+            const fd = new FormData();
+            fd.append('alarmId', alarmId);
+            fetch('/Project/AcknowledgeAlarm', { method: 'POST', body: fd })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        const card = document.getElementById('alarm-card-' + alarmId);
+                        if (card) {
+                            card.style.transition = 'opacity 0.4s ease';
+                            card.style.opacity = '0';
+                            setTimeout(() => card.remove(), 400);
+                        }
+                    }
+                })
+                .catch(err => console.error('Error acknowledging alarm:', err));
+        }
     </script>
 }

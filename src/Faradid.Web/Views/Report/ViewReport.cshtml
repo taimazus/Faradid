@@ -1437,11 +1437,12 @@
             <table class="a4-table" style="font-size: 10.5px;">
                 <thead>
                     <tr>
-                        <th style="width: 15%;">زمان‌بندی</th>
-                        <th style="width: 40%;">عنوان مقاله و ساختار محتوایی</th>
-                        <th style="width: 25%;">کلمات کلیدی هدف و LSI</th>
+                        <th style="width: 12%;">زمان‌بندی</th>
+                        <th style="width: 33%;">عنوان مقاله و ساختار محتوایی</th>
+                        <th style="width: 20%;">کلمات کلیدی هدف و LSI</th>
                         <th style="width: 10%; text-align: center;">هدف کاربر</th>
-                        <th style="width: 10%; text-align: center;">ایمپرشن</th>
+                        <th style="width: 8%; text-align: center;">ایمپرشن</th>
+                        <th style="width: 17%; text-align: center;" class="no-print">عملیات هوش مصنوعی</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1462,6 +1463,11 @@
                                 </td>
                                 <td class="text-center"><span class="badge bg-danger" style="font-size: 9px;">@art.UserSearchIntent</span></td>
                                 <td class="text-center font-monospace fw-bold text-primary">@(art.TargetWordCount / 2)+</td>
+                                <td class="text-center no-print align-middle">
+                                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 fw-bold" style="font-size: 10px; border-radius: 6px;" onclick="openAiArticleModal('@p.Id', @(art.Order > 0 ? art.Order : (wIdx + 1)))">
+                                        ⚡ نگارش کامل مقاله
+                                    </button>
+                                </td>
                             </tr>
                             wIdx++;
                         }
@@ -1477,6 +1483,11 @@
                             <td>تعمیر تخصصی در تبریز، هزینه خدمات، اعزام کارشناس</td>
                             <td class="text-center"><span class="badge bg-danger" style="font-size: 9px;">ثبت سفارش</span></td>
                             <td class="text-center font-monospace fw-bold text-primary">۱,۲۰۰+</td>
+                            <td class="text-center no-print align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 fw-bold" style="font-size: 10px; border-radius: 6px;" onclick="openAiArticleModal('@p.Id', 1)">
+                                    ⚡ نگارش کامل مقاله
+                                </button>
+                            </td>
                         </tr>
                         <tr>
                             <td class="fw-bold text-primary">هفته دوم آذر</td>
@@ -1487,6 +1498,11 @@
                             <td>عیب‌یابی تخصصی، خدمات در محل تبریز</td>
                             <td class="text-center"><span class="badge bg-primary" style="font-size: 9px;">تماس مستقیم</span></td>
                             <td class="text-center font-monospace fw-bold text-primary">۹۵۰+</td>
+                            <td class="text-center no-print align-middle">
+                                <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 fw-bold" style="font-size: 10px; border-radius: 6px;" onclick="openAiArticleModal('@p.Id', 2)">
+                                    ⚡ نگارش کامل مقاله
+                                </button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -1611,6 +1627,88 @@
         </div>
     </div>
 
+</div>
+
+<!-- Modal for AI Article Full Draft Generation -->
+<div class="modal fade" id="articleDraftModal" tabindex="-1" aria-labelledby="articleDraftModalLabel" aria-hidden="true" dir="rtl">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content" style="background: #ffffff; color: #1e293b; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: none;">
+            <div class="modal-header bg-dark text-white py-3 px-4" style="border-top-left-radius: 14px; border-top-right-radius: 14px;">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-2 py-1 fs-6">🤖 فَرادید AI Writer</span>
+                    <h5 class="modal-title fw-bold mb-0" id="articleDraftModalLabel">پیش‌نویس جامع و کامل مقاله راهبردی سئو</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="modalLoadingState" class="text-center py-5">
+                    <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="mt-3 fw-bold text-dark">درحال نگارش و تدوین ساختار عمیق ۲,۶۵۰ کلمه‌ای با استانداردهای E-E-A-T...</h5>
+                    <p class="text-muted small">تولید خودکار متادیتا، اسکیما JSON-LD، پرسش و پاسخ متداول (FAQ) و جدول تعرفه رسمی</p>
+                </div>
+
+                <div id="modalContentState" class="d-none">
+                    <div class="alert alert-success d-flex flex-wrap align-items-center justify-content-between p-3 mb-4 rounded-3 border-0" style="background-color: #ecfdf5; color: #065f46;">
+                        <div class="mb-2 mb-md-0">
+                            <strong>✅ نگارش کامل مقاله با موفقیت انجام شد:</strong>
+                            <span id="draftWordCountBadge" class="badge bg-success ms-2">۲,۶۵۰ کلمه</span>
+                            <span id="draftKeywordBadge" class="badge bg-info text-dark ms-1"></span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-primary fw-bold px-3" onclick="copyArticleHtml()">📋 کپی متن کامل HTML</button>
+                            <button type="button" class="btn btn-sm btn-outline-success fw-bold px-3" onclick="downloadArticleHtml()">📥 دانلود فایل HTML</button>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-pills mb-3 border-bottom pb-2" id="articleTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold" id="tab-preview" data-bs-toggle="pill" data-bs-target="#content-preview" type="button" role="tab">👁️ پیش‌نمایش بصری مقاله</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="tab-html" data-bs-toggle="pill" data-bs-target="#content-html" type="button" role="tab">💻 سورس کامل HTML (وردپرس / CMS)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="tab-schema" data-bs-toggle="pill" data-bs-target="#content-schema" type="button" role="tab">🏷️ کدهای ساختاریافته اسکیما (JSON-LD)</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold" id="tab-meta" data-bs-toggle="pill" data-bs-target="#content-meta" type="button" role="tab">⚙️ متادیتا و راهنمای سئو</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="articleTabsContent">
+                        <div class="tab-pane fade show active p-4 border rounded bg-light" id="content-preview" role="tabpanel" style="max-height: 520px; overflow-y: auto;">
+                            <div id="articleRenderedHtml"></div>
+                        </div>
+                        <div class="tab-pane fade" id="content-html" role="tabpanel">
+                            <textarea id="articleRawHtmlText" class="form-control font-monospace" rows="18" style="direction: ltr; font-size: 13px;" readonly></textarea>
+                        </div>
+                        <div class="tab-pane fade" id="content-schema" role="tabpanel">
+                            <textarea id="articleSchemaText" class="form-control font-monospace text-success bg-dark" rows="18" style="direction: ltr; font-size: 13px;" readonly></textarea>
+                        </div>
+                        <div class="tab-pane fade p-3" id="content-meta" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="fw-bold mb-1">عنوان سئو (Title Tag):</label>
+                                <input type="text" id="metaTitleInput" class="form-control" readonly />
+                            </div>
+                            <div class="mb-3">
+                                <label class="fw-bold mb-1">توضیحات متا (Meta Description):</label>
+                                <textarea id="metaDescInput" class="form-control" rows="3" readonly></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="fw-bold mb-1">کلیدواژه‌های فرعی و LSI پیشنهادی:</label>
+                                <div id="metaSecondaryKws" class="d-flex flex-wrap gap-2 mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2 px-4">
+                <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">بستن</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
@@ -1816,5 +1914,75 @@
             setPersona('all');
         }
     });
+
+    let currentGeneratedDraft = null;
+
+    async function openAiArticleModal(projectId, order) {
+        const modalEl = document.getElementById('articleDraftModal');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+
+        const loadingState = document.getElementById('modalLoadingState');
+        const contentState = document.getElementById('modalContentState');
+        loadingState.classList.remove('d-none');
+        contentState.classList.add('d-none');
+
+        try {
+            const formData = new FormData();
+            formData.append('projectId', projectId);
+            formData.append('articleOrder', order);
+
+            const res = await fetch('/Project/GenerateArticleDraft', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+            if (!data.success || !data.draft) {
+                throw new Error(data.message || 'خطا در نگارش مقاله هوش مصنوعی');
+            }
+
+            currentGeneratedDraft = data.draft;
+
+            document.getElementById('draftWordCountBadge').textContent = `${data.draft.wordCount.toLocaleString()} کلمه`;
+            document.getElementById('draftKeywordBadge').textContent = `کلیدواژه: ${data.draft.targetKeyword}`;
+            document.getElementById('articleRenderedHtml').innerHTML = data.draft.htmlContent;
+            document.getElementById('articleRawHtmlText').value = data.draft.htmlContent;
+            document.getElementById('articleSchemaText').value = data.draft.schemaJsonLd;
+            document.getElementById('metaTitleInput').value = data.draft.title;
+            document.getElementById('metaDescInput').value = data.draft.metaDescription;
+
+            const secondaryDiv = document.getElementById('metaSecondaryKws');
+            secondaryDiv.innerHTML = '';
+            (data.draft.secondaryKeywords || []).forEach(k => {
+                const sp = document.createElement('span');
+                sp.className = 'badge bg-secondary';
+                sp.textContent = k;
+                secondaryDiv.appendChild(sp);
+            });
+
+            loadingState.classList.add('d-none');
+            contentState.classList.remove('d-none');
+        } catch (err) {
+            console.error('Error generating article:', err);
+            loadingState.innerHTML = `<div class="alert alert-danger my-4">❌ ${err.message}</div>`;
+        }
+    }
+
+    function copyArticleHtml() {
+        if (!currentGeneratedDraft) return;
+        navigator.clipboard.writeText(currentGeneratedDraft.htmlContent).then(() => {
+            alert('متن کامل HTML با موفقیت در کلیپ‌بورد کپی شد.');
+        });
+    }
+
+    function downloadArticleHtml() {
+        if (!currentGeneratedDraft) return;
+        const blob = new Blob([currentGeneratedDraft.htmlContent], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Faradid-Article-${currentGeneratedDraft.targetKeyword.replace(/\\s+/g, '-')}.html`;
+        a.click();
+    }
 </script>
 }

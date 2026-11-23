@@ -90,7 +90,11 @@ public sealed class ProjectController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Details(Guid id)
+    public async Task<IActionResult> Details(
+        Guid id,
+        [FromServices] ILocalRankTrackerService localRankTracker,
+        [FromServices] ISiteCrawlerService crawler,
+        [FromServices] ISeoAlarmEngine alarmEngine)
     {
         var project = await _repo.GetProjectByIdAsync(id);
         if (project == null) return NotFound();
@@ -104,6 +108,9 @@ public sealed class ProjectController : Controller
         var reports = await _repo.GetReportsByProjectIdAsync(id);
         ViewBag.Reports = reports;
         ViewBag.IsAdmin = UserAccessHelper.IsAdmin(User);
+        ViewBag.LocalRanks = await localRankTracker.GetOrUpdateLocalRanksAsync(project);
+        ViewBag.CrawlResult = await crawler.GetLatestCrawlResultAsync(id);
+        ViewBag.ActiveAlarms = await alarmEngine.GetAlarmsByProjectAsync(id);
 
         return View(project);
     }
@@ -191,6 +198,13 @@ public sealed class ProjectController : Controller
             // 8. Save report in repository
             await _repo.SaveReportAsync(masterReport);
 
+            // 9. Evaluate real-time SEO alarms
+            var alarmEngine = HttpContext.RequestServices.GetService<ISeoAlarmEngine>();
+            if (alarmEngine != null)
+            {
+                await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit);
+            }
+
             TempData["SuccessMessage"] = $"کارنامه جامع فَرادید برای {project.Name} با موفقیت صادر گردید.";
             return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
         }
@@ -257,6 +271,12 @@ public sealed class ProjectController : Controller
 
             await _repo.SaveReportAsync(masterReport);
 
+            var alarmEngine = HttpContext.RequestServices.GetService<ISeoAlarmEngine>();
+            if (alarmEngine != null)
+            {
+                await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit);
+            }
+
             TempData["SuccessMessage"] = $"همگام‌سازی مستقیم با سرچ کنسول گوگل انجام شد و کارنامه هوشمند جدید صادر گردید.";
             return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
         }
@@ -282,5 +302,108 @@ public sealed class ProjectController : Controller
         await _repo.DeleteProjectAsync(id);
         TempData["SuccessMessage"] = "پروژه با موفقیت حذف گردید.";
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> GenerateArticleDraft(Guid projectId, int articleOrder, [FromServices] IAiArticleWriter writer)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            var reports = await _repo.GetReportsByProjectIdAsync(projectId);
+            var latestReport = reports.OrderByDescending(r => r.GeneratedAtUtc).FirstOrDefault();
+
+            EditorialArticleRecommendation articlePlan;
+            var recommended = latestReport?.AiSynthesis?.EditorialCalendar;
+            if (recommended != null && articleOrder >= 1 && articleOrder <= recommended.Count)
+            {
+                articlePlan = recommended[articleOrder - 1];
+            }
+            else
+            {
+                articlePlan = new EditorialArticleRecommendation
+                {
+                    Title = $"راهنمای جامع و کاربردی {project.Industry} در تبریز",
+                    TargetKeyword = project.Industry,
+                    UserSearchIntent = "تراکنشی و تجاری (Commercial / Transactional)"
+                };
+            }
+
+            var draft = await writer.GenerateFullArticleAsync(project, articlePlan);
+            return Json(new { success = true, draft });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating AI article draft for project {ProjectId}", projectId);
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AcknowledgeAlarm(Guid alarmId, [FromServices] ISeoAlarmEngine alarmEngine)
+    {
+        try
+        {
+            await alarmEngine.AcknowledgeAlarmAsync(alarmId);
+            return Json(new { success = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error acknowledging alarm {AlarmId}", alarmId);
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RunSiteCrawl(Guid projectId, [FromServices] ISiteCrawlerService crawler)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!UserAccessHelper.CanAccessProject(User, project))
+            {
+                TempData["ErrorMessage"] = "شما مجوز اجرای خزش این پروژه را ندارید.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var crawlResult = await crawler.CrawlDomainAsync(project, 20);
+            TempData["SuccessMessage"] = $"خزش آنلاین وب‌سایت با موفقیت انجام شد. نمره سلامت آن‌پیج: {crawlResult.OverallHealthScore}/۱۰۰ ({crawlResult.TotalPagesCrawled} صفحه پایش شد).";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error running site crawl for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در خزش آنلاین: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Details), new { id = projectId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddLocalKeyword(Guid projectId, string keyword, string? city, [FromServices] ILocalRankTrackerService tracker)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                await tracker.AddCustomKeywordAsync(projectId, keyword.Trim(), string.IsNullOrWhiteSpace(city) ? "تبریز" : city.Trim());
+                TempData["SuccessMessage"] = $"کلیدواژه محلی «{keyword}» به ردیاب رتبه‌های تبریز افزوده شد.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding local keyword for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در افزودن کلیدواژه محلی: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Details), new { id = projectId });
     }
 }

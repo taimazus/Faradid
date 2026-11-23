@@ -16,7 +16,7 @@ public sealed class HomeController : Controller
         _repo = repo;
     }
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index([FromServices] ISeoAlarmEngine? alarmEngine)
     {
         // Intercept incoming SSO authorization codes redirected to site root
         if (Request.Query.ContainsKey("code"))
@@ -38,6 +38,10 @@ public sealed class HomeController : Controller
         ViewBag.TotalProjects = allProjects.Count;
         ViewBag.UserProjectsCount = userProjects.Count;
         ViewBag.IsAdmin = UserAccessHelper.IsAdmin(User);
+        if (alarmEngine != null)
+        {
+            ViewBag.ActiveAlarms = await alarmEngine.GetAllActiveAlarmsAsync();
+        }
 
         return View(userProjects);
     }

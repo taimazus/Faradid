@@ -68,3 +68,38 @@ public interface IScheduledReportService
 {
     Task<int> ExecuteScheduledCycleAsync(CancellationToken ct = default);
 }
+
+public interface ISeoAlarmEngine
+{
+    Task<IReadOnlyList<SeoAlertLog>> EvaluateAlarmsAsync(
+        ProjectProfile project,
+        GscPeriodSummary current,
+        GscPeriodSummary? previous,
+        CodebaseAuditResult? audit,
+        CancellationToken ct = default);
+
+    Task<IReadOnlyList<SeoAlertLog>> GetAlarmsByProjectAsync(Guid projectId, CancellationToken ct = default);
+    Task<IReadOnlyList<SeoAlertLog>> GetAllActiveAlarmsAsync(CancellationToken ct = default);
+    Task AcknowledgeAlarmAsync(Guid alarmId, CancellationToken ct = default);
+}
+
+public interface IAiArticleWriter
+{
+    Task<GeneratedArticleDraft> GenerateFullArticleAsync(
+        ProjectProfile project,
+        EditorialArticleRecommendation articlePlan,
+        CancellationToken ct = default);
+}
+
+public interface ISiteCrawlerService
+{
+    Task<SiteCrawlResult> CrawlDomainAsync(ProjectProfile project, int maxPages = 20, CancellationToken ct = default);
+    Task<SiteCrawlResult?> GetLatestCrawlResultAsync(Guid projectId, CancellationToken ct = default);
+}
+
+public interface ILocalRankTrackerService
+{
+    Task<LocalRankTrackingSummary> GetOrUpdateLocalRanksAsync(ProjectProfile project, CancellationToken ct = default);
+    Task<LocalRankTrackingSummary?> GetLocalRanksAsync(Guid projectId, CancellationToken ct = default);
+    Task AddCustomKeywordAsync(Guid projectId, string keyword, string city = "تبریز", CancellationToken ct = default);
+}

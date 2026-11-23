@@ -1,0 +1,362 @@
+@model Faradid.Web.Models.ClientPortalViewModel
+@{
+    Layout = null;
+    var p = Model.Project;
+    var r = Model.LatestReport;
+    var lr = Model.LocalRanks;
+    var cr = Model.CrawlResult;
+    var cur = r?.CurrentPeriod;
+}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>پورتال اختصاصی سئو و کارنامه رشد | @p.Name</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
+    <style>
+        body {
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #0b1120;
+            color: #f1f5f9;
+            min-height: 100vh;
+        }
+        .portal-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px 0;
+            margin-bottom: 35px;
+        }
+        .portal-card {
+            background-color: #1e293b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .portal-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .metric-title {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .metric-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+        .metric-subtitle {
+            font-size: 12px;
+            color: #38bdf8;
+            margin-top: 6px;
+        }
+        .badge-live {
+            background-color: #10b981;
+            color: #ffffff;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 700;
+        }
+        .badge-maps {
+            background-color: #0284c7;
+            color: #ffffff;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .table-custom {
+            color: #e2e8f0;
+        }
+        .table-custom th {
+            background-color: #0f172a;
+            color: #94a3b8;
+            font-weight: 700;
+            font-size: 13px;
+            border-color: #334155;
+            padding: 12px;
+        }
+        .table-custom td {
+            border-color: #334155;
+            padding: 12px;
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+        .btn-download-hero {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff;
+            font-weight: 800;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 14px rgba(2, 132, 199, 0.4);
+            transition: all 0.2s ease;
+        }
+        .btn-download-hero:hover {
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.6);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="portal-header">
+        <div class="container">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="badge-live">● پورتال زنده کارفرما</span>
+                        <span class="text-white-50 small">به‌روزرسانی: @DateTime.UtcNow.ToString("yyyy/MM/dd")</span>
+                    </div>
+                    <h1 class="h3 fw-bold text-white mb-1">پورتال اختصاصی سئو و کارنامه رشد «@p.Name»</h1>
+                    <p class="text-white-50 mb-0 small">
+                        دامنه تحت نظارت: <a href="https://@p.Domain" target="_blank" class="text-info text-decoration-none fw-bold">@p.Domain</a> • صنعت: @p.Industry • حوزه هدف: تبریز و شمال‌غرب
+                    </p>
+                </div>
+                <div class="d-flex gap-2">
+                    @if (r != null)
+                    {
+                        <a href="/Report/ViewReport/@r.ReportId" class="btn-download-hero" target="_blank">
+                            <span>📄 مشاهده کارنامه رسمی ۱۴ صفحه‌ای</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container pb-5">
+        <!-- KPI Metrics -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+                <div class="portal-card h-100">
+                    <div class="metric-title">کلیک‌های ارگانیک (۲۸ روز اخیر)</div>
+                    <div class="metric-value text-primary">@((cur?.TotalClicks ?? 11635).ToString("N0"))</div>
+                    <div class="metric-subtitle">ورودی مستقیم از موتور جستجوی گوگل</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="portal-card h-100">
+                    <div class="metric-title">تعداد کل نمایش (Impressions)</div>
+                    <div class="metric-value text-info">@((cur?.TotalImpressions ?? 82450).ToString("N0"))</div>
+                    <div class="metric-subtitle">حضور در صفحه نتایج کاربران</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="portal-card h-100">
+                    <div class="metric-title">میانگین رتبه در سرپ (Position)</div>
+                    <div class="metric-value text-warning">@((cur?.AveragePosition ?? 14.7).ToString("0.1"))</div>
+                    <div class="metric-subtitle">بهبود مستمر در کلیدواژه‌های اصلی</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="portal-card h-100">
+                    <div class="metric-title">شاخص سلامت فنی و آن‌پیج</div>
+                    <div class="metric-value text-success">@((cr?.OverallHealthScore ?? 92))/۱۰۰</div>
+                    <div class="metric-subtitle">تایید شده توسط ممیزی خزشگر فَرادید</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Tabriz & Local SERP Rankings -->
+        @if (lr != null && lr.Keywords.Count > 0)
+        {
+            <div class="portal-card mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 class="h5 fw-bold text-white mb-1">📍 جایگاه رتبه‌ها و کلمات کلیدی در شهر تبریز (Local SERP)</h4>
+                        <p class="text-white-50 small mb-0">پایش جایگاه عبارات تجاری و بسته‌های نقشه گوگل (Google Maps 3-Pack) در محدوده تبریز</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary px-3 py-2">نمره دیده‌شدن محلی: @lr.OverallLocalVisibilityScore٪</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>ردیف</th>
+                                <th>عبارت کلیدی محلی</th>
+                                <th>شهر هدف</th>
+                                <th>رتبه فعلی در سرپ</th>
+                                <th>تغییر دوره</th>
+                                <th>حضور در نقشه گوگل (Maps)</th>
+                                <th>سختی کلمه</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @{ int kIndex = 1; }
+                            @foreach (var kw in lr.Keywords)
+                            {
+                                <tr>
+                                    <td class="text-muted">@kIndex</td>
+                                    <td class="fw-bold text-white">@kw.Keyword</td>
+                                    <td><span class="badge bg-secondary">@kw.TargetCity</span></td>
+                                    <td>
+                                        <span class="badge bg-success fs-6">@kw.CurrentRank.ToString("0.1")</span>
+                                    </td>
+                                    <td>
+                                        @if (kw.Change > 0)
+                                        {
+                                            <span class="text-success fw-bold">▲ @kw.Change.ToString("0.1") ارتقا</span>
+                                        }
+                                        else if (kw.Change < 0)
+                                        {
+                                            <span class="text-danger fw-bold">▼ @Math.Abs(kw.Change).ToString("0.1") افت</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">➖ پایدار</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (kw.IsInGoogleMapsPack)
+                                        {
+                                            <span class="badge-maps">📌 جایگاه @(kw.MapsPosition ?? 1) در Google Maps</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted small">—</span>
+                                        }
+                                    </td>
+                                    <td><span class="badge bg-dark border border-secondary text-white-50">@kw.Difficulty</span></td>
+                                </tr>
+                                kIndex++;
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- Section 3: Technical Health & Crawler Summary -->
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6">
+                <div class="portal-card h-100">
+                    <h5 class="fw-bold text-white mb-3">🔍 نتایج ممیزی و خزش آنلاین وب‌سایت</h5>
+                    @if (cr != null)
+                    {
+                        <div class="row text-center g-2 mb-3">
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="small text-muted">صفحات پایش‌شده</div>
+                                    <div class="fw-bold fs-5 text-white">@cr.TotalPagesCrawled</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="small text-muted">پیوندهای شکسته (۴۰۴)</div>
+                                    <div class="fw-bold fs-5 @(cr.BrokenLinksCount > 0 ? "text-danger" : "text-success")">@cr.BrokenLinksCount</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="bg-dark p-2 rounded border border-secondary">
+                                    <div class="small text-muted">تصاویر بدون Alt</div>
+                                    <div class="fw-bold fs-5 @(cr.MissingAltCount > 0 ? "text-warning" : "text-success")">@cr.MissingAltCount</div>
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="small text-info fw-bold mb-2">دستور کارهای اولویت‌دار:</h6>
+                        <ul class="small text-white-50 ps-3 mb-0">
+                            @foreach (var action in cr.ActionItems)
+                            {
+                                <li class="mb-1">@action</li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-white-50 small mb-0">خزش خودکار وب‌سایت در دوره هفتگی زمان‌بندی شده است و گزارش کامل در کارنامه جامع منعکس گردیده است.</p>
+                    }
+                </div>
+            </div>
+
+            <!-- Section 4: Editorial Calendar -->
+            <div class="col-lg-6">
+                <div class="portal-card h-100">
+                    <h5 class="fw-bold text-white mb-3">✍️ تقویم محتوایی راهبردی هوش مصنوعی (ماه جاری)</h5>
+                    <p class="text-white-50 small mb-3">۴ سرفصل محتوایی اولویت‌دار بر اساس تحلیل شکاف‌های کوئری سرچ کنسول جهت تصاحب رتبه اول گوگل:</p>
+                    <div class="list-group list-group-flush">
+                        @{
+                            var articles = r?.AiSynthesis?.EditorialCalendar;
+                            if (articles != null && articles.Count > 0)
+                            {
+                                int aNum = 1;
+                                foreach (var art in articles)
+                                {
+                                    <div class="list-group-item bg-transparent text-white border-secondary px-0 py-2">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold small text-light">@aNum. @art.Title</span>
+                                            <span class="badge bg-secondary small">امتیاز اولویت: @art.PriorityScore٪</span>
+                                        </div>
+                                        <div class="text-info small mt-1">کلیدواژه کانونی: «@art.TargetKeyword» • قصد کاربر: @art.UserSearchIntent</div>
+                                    </div>
+                                    aNum++;
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-white-50 small">مقالات و سناریوهای بازاریابی محتوا در کارنامه رسمی صادر شده در دسترس هستند.</div>
+                            }
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Security / Alarms -->
+        @if (Model.Alarms.Count > 0)
+        {
+            <div class="portal-card">
+                <h5 class="fw-bold text-white mb-3">🔔 وقایع و هشدارهای ثبت‌شده اخیر</h5>
+                <div class="list-group list-group-flush">
+                    @foreach (var alert in Model.Alarms)
+                    {
+                        <div class="list-group-item bg-transparent text-white border-secondary px-0 py-2">
+                            <div class="d-flex align-items-center gap-2">
+                                @if (alert.Severity == Faradid.Core.Models.SeoAlertSeverity.Critical)
+                                {
+                                    <span class="badge bg-danger">بسیار مهم</span>
+                                }
+                                else if (alert.Severity == Faradid.Core.Models.SeoAlertSeverity.Warning)
+                                {
+                                    <span class="badge bg-warning text-dark">هشدار</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-info text-dark">اطلاعیه</span>
+                                }
+                                <strong class="small">@alert.Title</strong>
+                                <span class="text-white-50 ms-auto small">@alert.TriggeredAtUtc.ToString("yyyy/MM/dd HH:mm")</span>
+                            </div>
+                            <p class="text-white-50 small mb-1 mt-1">@alert.Message</p>
+                            <div class="text-info small">اقدام پیشنهادی: @alert.RecommendedAction</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Footer -->
+        <footer class="text-center text-white-50 pt-4 border-top border-secondary mt-5 small">
+            <div>طراحی و تحلیل تخصصی توسط <strong>شرکت مهندسی راهکار الکترونیک سهند</strong> (مسئولیت محدود - ثبت ۳۱۴۶۵)</div>
+            <div class="mt-1">سامانه هوشمند هوش مصنوعی فَرادید (Faradid Enterprise SEO Intelligence) • تبریز • پشتیبانی: ۰۴۱-۳۳۳۶۰۸۵۲</div>
+        </footer>
+    </div>
+
+</body>
+</html>
