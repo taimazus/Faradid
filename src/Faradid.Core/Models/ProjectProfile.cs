@@ -12,6 +12,8 @@ public sealed class ProjectProfile
     public string? LocalSourcePath { get; set; }
     public string? TargetReportPath { get; set; }
     public string Notes { get; set; } = string.Empty;
+    public string OwnerUsername { get; set; } = string.Empty;
+    public string OwnerEmail { get; set; } = string.Empty;
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }

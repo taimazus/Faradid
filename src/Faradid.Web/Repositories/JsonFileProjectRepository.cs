@@ -52,18 +52,54 @@ public sealed class JsonFileProjectRepository : IProjectRepository
 
     private void InitializeSeedProjects()
     {
-        if (File.Exists(_projectsFilePath)) return;
-
-        var seedProjects = GetInitialProjectList();
-
         try
         {
-            var json = JsonSerializer.Serialize(seedProjects, JsonOptions);
-            File.WriteAllText(_projectsFilePath, json);
+            var seedProjects = GetInitialProjectList();
+
+            if (!File.Exists(_projectsFilePath))
+            {
+                var json = JsonSerializer.Serialize(seedProjects, JsonOptions);
+                File.WriteAllText(_projectsFilePath, json);
+                return;
+            }
+
+            // If file exists, ensure all initial projects have correct owners
+            var existingJson = File.ReadAllText(_projectsFilePath);
+            var existingList = JsonSerializer.Deserialize<List<ProjectProfile>>(existingJson, JsonOptions) ?? new List<ProjectProfile>();
+            var modified = false;
+
+            foreach (var seed in seedProjects)
+            {
+                var match = existingList.FirstOrDefault(p => p.Id == seed.Id || p.Domain.Equals(seed.Domain, StringComparison.OrdinalIgnoreCase));
+                if (match == null)
+                {
+                    existingList.Add(seed);
+                    modified = true;
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(match.OwnerUsername))
+                    {
+                        match.OwnerUsername = seed.OwnerUsername;
+                        match.OwnerEmail = seed.OwnerEmail;
+                        modified = true;
+                    }
+                    if (string.IsNullOrWhiteSpace(match.TargetReportPath) || match.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        match.TargetReportPath = seed.TargetReportPath;
+                        modified = true;
+                    }
+                }
+            }
+
+            if (modified)
+            {
+                File.WriteAllText(_projectsFilePath, JsonSerializer.Serialize(existingList, JsonOptions));
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to initialize seed projects in {Path}", _projectsFilePath);
+            _logger.LogError(ex, "Failed to initialize or update seed projects in {Path}", _projectsFilePath);
         }
     }
 
@@ -148,8 +184,10 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 ClientName = "شرکت راهکار الکترونیک سهند",
                 Industry = "طراحی نرم‌افزار سازمانی و هوشمندسازی صنعتی",
                 LocalSourcePath = @"F:\Projects\Irres.ir",
-                TargetReportPath = @"F:\SEO-Reports\irres",
+                TargetReportPath = @"App_Data/exports/irres",
                 Notes = "سامانه مرکزی و اتوماسیون تردد پرسنلی و سیستم‌های مدیریت پسماند",
+                OwnerUsername = "irres",
+                OwnerEmail = "info@irres.ir",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-60),
                 UpdatedAtUtc = DateTime.UtcNow
             },
@@ -161,8 +199,10 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 ClientName = "گروه مهندسی و خدماتی یونارک",
                 Industry = "خدمات کفسابی، نماشویی و پیچ‌رولپلاک با طناب",
                 LocalSourcePath = @"F:\Projects\yonarak.ir",
-                TargetReportPath = @"F:\SEO-Reports\yonarak",
+                TargetReportPath = @"App_Data/exports/yonarak",
                 Notes = "خدمات صنعتی راپل و ساب سنگ در منطقه شمال‌غرب",
+                OwnerUsername = "yonarak",
+                OwnerEmail = "manager@yonarak.ir",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-45),
                 UpdatedAtUtc = DateTime.UtcNow
             },
@@ -174,8 +214,10 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 ClientName = "شرکت مدیریت پسماند آسا زیست",
                 Industry = "بی‌خطرسازی و امحای پسماندهای عفونی و پزشکی",
                 LocalSourcePath = @"F:\Projects\Asazist",
-                TargetReportPath = @"F:\SEO-Reports\asazist",
+                TargetReportPath = @"App_Data/exports/asazist",
                 Notes = "قراردادهای بیمارستانی و سلامت محیط زیست",
+                OwnerUsername = "asazist",
+                OwnerEmail = "info@asazist.com",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-40),
                 UpdatedAtUtc = DateTime.UtcNow
             },
@@ -187,8 +229,10 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 ClientName = "مجموعه سیسمونی و کالای نوزاد اسپینورا",
                 Industry = "سیسمونی نوزاد، کالسکه و صندلی خودرو کودک",
                 LocalSourcePath = @"F:\Projects\Spinora.ir",
-                TargetReportPath = @"F:\SEO-Reports\spinora",
+                TargetReportPath = @"App_Data/exports/spinora",
                 Notes = "فروشگاه آنلاین محصولات لوکس و استاندارد مادر و کودک",
+                OwnerUsername = "spinora",
+                OwnerEmail = "support@spinora.ir",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-30),
                 UpdatedAtUtc = DateTime.UtcNow
             },
@@ -200,8 +244,10 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 ClientName = "مرکز تخصصی تعمیرات صوتی تصویری تبریز",
                 Industry = "تعمیر تخصصی بک‌لایت و پنل تلویزیون",
                 LocalSourcePath = @"F:\Projects\TabrizTv",
-                TargetReportPath = @"F:\SEO-Reports\tbztvrepair",
+                TargetReportPath = @"App_Data/exports/tbztvrepair",
                 Notes = "سرویس فوری در محل و گارانتی تعویض قطعات اصلی",
+                OwnerUsername = "tbztv",
+                OwnerEmail = "service@tbztvrepair.ir",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-20),
                 UpdatedAtUtc = DateTime.UtcNow
             }

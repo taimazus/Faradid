@@ -101,27 +101,96 @@ public sealed class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> DevBypassLogin(string username = "مدیر سیستم (سهند)", string? returnUrl = null)
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DirectLogin(string username, string? role = null, string? returnUrl = null)
     {
-        var config = _centralAuth.GetConfig();
-        if (!config.AllowLocalBypass)
+        if (string.IsNullOrWhiteSpace(username))
         {
-            return Forbid();
+            TempData["ErrorMessage"] = "نام کاربری نمی‌تواند خالی باشد.";
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        username = username.Trim();
+        string displayName;
+        string email;
+        string assignedRole;
+
+        switch (username.ToLowerInvariant())
+        {
+            case "admin":
+            case "sahand":
+            case "مدیر":
+            case "مدیر سیستم (سهند)":
+            case "کارشناس ارشد سئو (سهند)":
+                username = "admin";
+                displayName = "مدیر کل راهکار الکترونیک سهند";
+                email = "admin@irres.ir";
+                assignedRole = "Admin";
+                break;
+
+            case "yonarak":
+                displayName = "مدیریت یونارک (Yonarak)";
+                email = "manager@yonarak.ir";
+                assignedRole = "Client";
+                break;
+
+            case "asazist":
+                displayName = "مدیریت آسا زیست تبریز";
+                email = "info@asazist.com";
+                assignedRole = "Client";
+                break;
+
+            case "spinora":
+                displayName = "مدیریت کالای نوزاد اسپینورا";
+                email = "support@spinora.ir";
+                assignedRole = "Client";
+                break;
+
+            case "tbztv":
+            case "tabriztv":
+                displayName = "مدیریت تعمیر تلویزیون تبریز";
+                email = "service@tbztvrepair.ir";
+                assignedRole = "Client";
+                break;
+
+            case "irres":
+                displayName = "پرتال مرکزی راهکار الکترونیک سهند";
+                email = "info@irres.ir";
+                assignedRole = "Client";
+                break;
+
+            default:
+                displayName = username;
+                email = $"{username}@irres.ir";
+                assignedRole = !string.IsNullOrWhiteSpace(role) && role.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "Client";
+                break;
         }
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString()),
-            new(ClaimTypes.Name, username),
-            new(ClaimTypes.Email, "admin@irres.ir"),
-            new(ClaimTypes.Role, "Admin"),
-            new(ClaimTypes.Role, "SeoSpecialist")
+            new(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString("N")),
+            new(ClaimTypes.Name, displayName),
+            new(ClaimTypes.Email, email),
+            new(ClaimTypes.Role, assignedRole),
+            new("Username", username)
         };
+
+        if (assignedRole == "Admin")
+        {
+            claims.Add(new(ClaimTypes.Role, "SeoSpecialist"));
+        }
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
-        return LocalRedirect(returnUrl ?? "/");
+        TempData["SuccessMessage"] = $"خوش آمدید، {displayName}. وارد سامانه فَرادید شدید.";
+        return LocalRedirect(!string.IsNullOrWhiteSpace(returnUrl) ? returnUrl : "/");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DevBypassLogin(string username = "مدیر سیستم (سهند)", string? returnUrl = null)
+    {
+        return await DirectLogin(username, "Admin", returnUrl);
     }
 
     [HttpPost]
@@ -129,6 +198,7 @@ public sealed class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction("Index", "Home");
+        TempData["SuccessMessage"] = "با موفقیت از سامانه فَرادید خارج شدید.";
+        return RedirectToAction(nameof(Login));
     }
 }

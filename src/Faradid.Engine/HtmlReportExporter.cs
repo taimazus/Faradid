@@ -14,25 +14,51 @@ public sealed class HtmlReportExporter : IReportExporter
 {
     public async Task<string> ExportHtmlAsync(FaradidMasterReport report, string destinationPath, CancellationToken ct = default)
     {
-        string targetFile;
-        if (Directory.Exists(destinationPath))
-        {
-            var fileName = $"Faradid-Report-{report.Project.Domain.Replace(".", "-")}-{DateTime.UtcNow:yyyyMMdd-HHmm}.html";
-            targetFile = Path.Combine(destinationPath, fileName);
-        }
-        else
-        {
-            targetFile = destinationPath;
-            var dir = Path.GetDirectoryName(targetFile);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-        }
-
         var html = GenerateHtmlContent(report);
-        await File.WriteAllTextAsync(targetFile, html, Encoding.UTF8, ct);
-        return targetFile;
+        string targetFile;
+
+        try
+        {
+            if (Directory.Exists(destinationPath))
+            {
+                var fileName = $"Faradid-Report-{report.Project.Domain.Replace(".", "-")}-{DateTime.UtcNow:yyyyMMdd-HHmm}.html";
+                targetFile = Path.Combine(destinationPath, fileName);
+            }
+            else
+            {
+                if (Path.HasExtension(destinationPath))
+                {
+                    targetFile = destinationPath;
+                }
+                else
+                {
+                    var fileName = $"Faradid-Report-{report.Project.Domain.Replace(".", "-")}-{DateTime.UtcNow:yyyyMMdd-HHmm}.html";
+                    targetFile = Path.Combine(destinationPath, fileName);
+                }
+
+                var dir = Path.GetDirectoryName(targetFile);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+            }
+
+            await File.WriteAllTextAsync(targetFile, html, Encoding.UTF8, ct);
+            return targetFile;
+        }
+        catch (Exception)
+        {
+            // Defensive Fallback: If destinationPath is inaccessible (e.g. F:\ on remote IIS server),
+            // safely store inside App_Data/exports within the application root directory
+            var fallbackDir = Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", report.Project.Domain);
+            if (!Directory.Exists(fallbackDir))
+            {
+                Directory.CreateDirectory(fallbackDir);
+            }
+            var safeFile = Path.Combine(fallbackDir, $"Faradid-Report-{report.Project.Domain.Replace(".", "-")}-{DateTime.UtcNow:yyyyMMdd-HHmm}.html");
+            await File.WriteAllTextAsync(safeFile, html, Encoding.UTF8, ct);
+            return safeFile;
+        }
     }
 
     public static string GenerateHtmlContent(FaradidMasterReport report)

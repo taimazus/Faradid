@@ -66,54 +66,79 @@
     <!-- Flagship Projects Grid -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold mb-1 text-light">پروژه‌های دیده‌بانی شده فعال</h3>
-            <p class="text-secondary small mb-0">کارنامه‌های سئو، ممیزی کدهای محلی و تقویم سردبیری وب‌سایت‌های سازمانی</p>
+            <h3 class="fw-bold mb-1 text-light">
+                @if (ViewBag.IsAdmin == true)
+                {
+                    <span>پروژه‌های دیده‌بانی شده سازمانی</span>
+                    <span class="badge bg-danger ms-2 fs-6">دسترسی کامل مدیر</span>
+                }
+                else
+                {
+                    <span>پروژه‌های اختصاصی تحت پایش</span>
+                    <span class="badge bg-info text-dark ms-2 fs-6">حساب کارفرما</span>
+                }
+            </h3>
+            <p class="text-secondary small mb-0">کارنامه‌های سئو، ممیزی کدهای محلی و تقویم سردبیری وب‌سایت‌های سازمانی مجاز</p>
         </div>
-        <a asp-controller="Project" asp-action="Create" class="btn btn-sm btn-faradid">افزودن سایت جدید +</a>
+        @if (ViewBag.IsAdmin == true)
+        {
+            <a asp-controller="Project" asp-action="Create" class="btn btn-sm btn-faradid">افزودن سایت جدید +</a>
+        }
     </div>
 
-    <div class="row g-4 mb-5">
-        @foreach (var proj in Model)
-        {
-            <div class="col-md-6 col-lg-4">
-                <div class="card-faradid h-100 p-4 d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                        <div>
-                            <h5 class="fw-bold mb-1 text-light">@proj.Name</h5>
-                            <a href="https://@proj.Domain" target="_blank" class="small text-decoration-none fw-semibold" style="color: #00e5ff;">@proj.Domain ↗</a>
-                        </div>
-                        <span class="badge bg-dark border border-secondary text-light">@proj.Industry.Split(' ')[0]</span>
-                    </div>
-
-                    <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.8;">
-                        @proj.Notes
-                    </p>
-
-                    <div class="border-top border-secondary pt-3 mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="small text-muted">مسیر سورس‌کد محلی:</span>
-                            <span class="badge bg-secondary font-monospace" style="max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                @(string.IsNullOrWhiteSpace(proj.LocalSourcePath) ? "تنظیم‌نشده" : proj.LocalSourcePath)
-                            </span>
+    @if (Model.Count == 0)
+    {
+        <div class="card-faradid p-5 text-center mb-5">
+            <div class="fs-1 mb-3">🔒</div>
+            <h4 class="fw-bold text-light mb-2">هیچ پروژه‌ای برای این حساب کاربری تعریف نشده است</h4>
+            <p class="text-secondary small mb-3">دسترسی شما به دامنه‌های تحت نظارت محدود است. جهت اتصال دامنه اختصاصی به پنل، با تیم فنی تماس حاصل فرمایید.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-5">
+            @foreach (var proj in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card-faradid h-100 p-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="fw-bold mb-1 text-light">@proj.Name</h5>
+                                <a href="https://@proj.Domain" target="_blank" class="small text-decoration-none fw-semibold" style="color: #00e5ff;">@proj.Domain ↗</a>
+                            </div>
+                            <span class="badge bg-dark border border-secondary text-light">@proj.Industry.Split(' ')[0]</span>
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <a asp-controller="Project" asp-action="Details" asp-route-id="@proj.Id" class="btn btn-sm btn-faradid-outline flex-grow-1">
-                                جزئیات و تاریخچه
-                            </a>
-                            <form asp-controller="Project" asp-action="GenerateReport" method="post" class="flex-grow-1">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="projectId" value="@proj.Id" />
-                                <button type="submit" class="btn btn-sm btn-faradid w-100">
-                                    ⚡ صدور کارنامه
-                                </button>
-                            </form>
+                        <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.8;">
+                            @proj.Notes
+                        </p>
+
+                        <div class="border-top border-secondary pt-3 mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <span class="small text-muted">کارفرما / مالک:</span>
+                                <span class="badge bg-dark text-info border border-secondary font-monospace">
+                                    @(string.IsNullOrWhiteSpace(proj.OwnerUsername) ? "admin" : proj.OwnerUsername)
+                                </span>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a asp-controller="Project" asp-action="Details" asp-route-id="@proj.Id" class="btn btn-sm btn-faradid-outline flex-grow-1">
+                                    جزئیات و تاریخچه
+                                </a>
+                                <form asp-controller="Project" asp-action="GenerateReport" method="post" class="flex-grow-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="projectId" value="@proj.Id" />
+                                    <button type="submit" class="btn btn-sm btn-faradid w-100">
+                                        ⚡ صدور کارنامه
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
 
     <!-- System Architecture Modules -->
     <div class="card-faradid p-4 p-lg-5 mb-5">

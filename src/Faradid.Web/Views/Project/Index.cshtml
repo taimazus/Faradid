@@ -6,12 +6,17 @@
 <div class="container-fluid px-lg-5 py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-1">پروژه‌های دیده‌بانی سئو و ممیزی وب</h2>
+            <h2 class="fw-bold mb-1">
+                @(ViewBag.IsAdmin == true ? "پروژه‌های دیده‌بانی سئو سازمانی" : "پروژه‌های دیده‌بانی من")
+            </h2>
             <p class="text-secondary small mb-0">مدیریت دامنه‌ها، تنظیم مسیر کدهای محلی و صدور کارنامه‌های تحلیلی دوره‌ای</p>
         </div>
-        <a asp-action="Create" class="btn btn-faradid d-flex align-items-center gap-2">
-            <span>+ ثبت دامنه جدید</span>
-        </a>
+        @if (ViewBag.IsAdmin == true)
+        {
+            <a asp-action="Create" class="btn btn-faradid d-flex align-items-center gap-2">
+                <span>+ ثبت دامنه جدید</span>
+            </a>
+        }
     </div>
 
     <div class="card-faradid p-3">

@@ -1,14 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Faradid.Core.Enums;
 using Faradid.Core.Interfaces;
 using Faradid.Core.Models;
+using Faradid.Web.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Faradid.Web.Controllers;
 
+[Authorize]
 public sealed class ProjectController : Controller
 {
     private readonly IProjectRepository _repo;
@@ -18,6 +23,7 @@ public sealed class ProjectController : Controller
     private readonly ICompetitorBenchmarkingEngine _competitorEngine;
     private readonly IAiCopilotService _aiCopilot;
     private readonly IReportExporter _exporter;
+    private readonly ILogger<ProjectController> _logger;
 
     public ProjectController(
         IProjectRepository repo,
@@ -26,7 +32,8 @@ public sealed class ProjectController : Controller
         IComparativeAnalyticsEngine comparativeEngine,
         ICompetitorBenchmarkingEngine competitorEngine,
         IAiCopilotService aiCopilot,
-        IReportExporter exporter)
+        IReportExporter exporter,
+        ILogger<ProjectController> logger)
     {
         _repo = repo;
         _auditor = auditor;
@@ -35,13 +42,16 @@ public sealed class ProjectController : Controller
         _competitorEngine = competitorEngine;
         _aiCopilot = aiCopilot;
         _exporter = exporter;
+        _logger = logger;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index()
     {
-        var projects = await _repo.GetAllProjectsAsync();
-        return View(projects);
+        var allProjects = await _repo.GetAllProjectsAsync();
+        var userProjects = UserAccessHelper.FilterProjects(User, allProjects);
+        ViewBag.IsAdmin = UserAccessHelper.IsAdmin(User);
+        return View(userProjects);
     }
 
     [HttpGet]
@@ -65,9 +75,13 @@ public sealed class ProjectController : Controller
         model.CreatedAtUtc = DateTime.UtcNow;
         model.UpdatedAtUtc = DateTime.UtcNow;
 
-        if (string.IsNullOrWhiteSpace(model.TargetReportPath))
+        // Auto-assign owner to current user
+        model.OwnerUsername = User.FindFirst("Username")?.Value ?? User.Identity?.Name ?? "admin";
+        model.OwnerEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "admin@irres.ir";
+
+        if (string.IsNullOrWhiteSpace(model.TargetReportPath) || model.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase))
         {
-            model.TargetReportPath = Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "exports", model.Domain);
+            model.TargetReportPath = Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", model.Domain);
         }
 
         await _repo.SaveProjectAsync(model);
@@ -81,8 +95,15 @@ public sealed class ProjectController : Controller
         var project = await _repo.GetProjectByIdAsync(id);
         if (project == null) return NotFound();
 
+        if (!UserAccessHelper.CanAccessProject(User, project))
+        {
+            TempData["ErrorMessage"] = "شما مجوز دسترسی به اطلاعات این پروژه را ندارید.";
+            return RedirectToAction(nameof(Index));
+        }
+
         var reports = await _repo.GetReportsByProjectIdAsync(id);
         ViewBag.Reports = reports;
+        ViewBag.IsAdmin = UserAccessHelper.IsAdmin(User);
 
         return View(project);
     }
@@ -91,75 +112,97 @@ public sealed class ProjectController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerateReport(Guid projectId, string? gscCsvContent = null, string? persona = "Executive")
     {
-        var project = await _repo.GetProjectByIdAsync(projectId);
-        if (project == null) return NotFound();
-
-        var activePersona = Enum.TryParse<PersonaView>(persona, true, out var parsedPersona) ? parsedPersona : PersonaView.Executive;
-
-        // 1. Ingest or generate GSC period summaries
-        GscPeriodSummary currentGsc;
-        if (!string.IsNullOrWhiteSpace(gscCsvContent))
+        try
         {
-            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gscCsvContent));
-            currentGsc = await _gscParser.ParseCsvAsync(stream, "ماه جاری (Current Month)");
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!UserAccessHelper.CanAccessProject(User, project))
+            {
+                TempData["ErrorMessage"] = "شما مجوز صدور یا مشاهده کارنامه این پروژه را ندارید.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var activePersona = Enum.TryParse<PersonaView>(persona, true, out var parsedPersona) ? parsedPersona : PersonaView.Executive;
+
+            // 1. Ingest or generate GSC period summaries
+            GscPeriodSummary currentGsc;
+            if (!string.IsNullOrWhiteSpace(gscCsvContent))
+            {
+                using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gscCsvContent));
+                currentGsc = await _gscParser.ParseCsvAsync(stream, "ماه جاری (Current Month)");
+            }
+            else
+            {
+                currentGsc = _gscParser.CreatePresetData(project.Domain, "دوره ۲۸ روزه اخیر", 28);
+            }
+
+            var previousGsc = _gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین", 28);
+
+            // 2. Perform Codebase Audit if local path provided
+            CodebaseAuditResult? codeAudit = null;
+            if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
+            {
+                codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
+            }
+
+            // 3. Compute comparative metrics & VPN/Crisis anomalies
+            var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
+
+            // 4. Benchmark competitors
+            var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
+
+            // 5. Generate AI Copilot strategic synthesis & 4 editorial articles
+            var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
+
+            // 6. Build Master Report
+            var masterReport = new FaradidMasterReport
+            {
+                ReportId = Guid.NewGuid(),
+                Project = project,
+                ActivePersona = activePersona,
+                GeneratedAtUtc = DateTime.UtcNow,
+                CurrentPeriod = currentGsc,
+                PreviousPeriod = previousGsc,
+                Comparative = comparative,
+                CodeAudit = codeAudit,
+                Competitors = competitors,
+                AiSynthesis = aiReport
+            };
+
+            // 7. Export HTML safely to target destination
+            var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
+                ? project.TargetReportPath
+                : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
+
+            var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
+            masterReport.ExportPath = exportFile;
+
+            // 8. Save report in repository
+            await _repo.SaveReportAsync(masterReport);
+
+            TempData["SuccessMessage"] = $"کارنامه جامع فَرادید برای {project.Name} با موفقیت صادر گردید.";
+            return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
         }
-        else
+        catch (Exception ex)
         {
-            currentGsc = _gscParser.CreatePresetData(project.Domain, "دوره ۲۸ روزه اخیر", 28);
+            _logger.LogError(ex, "Error generating report for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در صدور کارنامه: {ex.Message}";
+            return RedirectToAction(nameof(Details), new { id = projectId });
         }
-
-        var previousGsc = _gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین", 28);
-
-        // 2. Perform Codebase Audit if local path provided
-        CodebaseAuditResult? codeAudit = null;
-        if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
-        {
-            codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
-        }
-
-        // 3. Compute comparative metrics & VPN/Crisis anomalies
-        var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
-
-        // 4. Benchmark competitors
-        var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
-
-        // 5. Generate AI Copilot strategic synthesis & 4 editorial articles
-        var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
-
-        // 6. Build Master Report
-        var masterReport = new FaradidMasterReport
-        {
-            ReportId = Guid.NewGuid(),
-            Project = project,
-            ActivePersona = activePersona,
-            GeneratedAtUtc = DateTime.UtcNow,
-            CurrentPeriod = currentGsc,
-            PreviousPeriod = previousGsc,
-            Comparative = comparative,
-            CodeAudit = codeAudit,
-            Competitors = competitors,
-            AiSynthesis = aiReport
-        };
-
-        // 7. Export HTML to target destination
-        var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath)
-            ? project.TargetReportPath
-            : Path.Combine(Directory.GetCurrentDirectory(), "App_Data", "exports", project.Domain);
-
-        var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
-        masterReport.ExportPath = exportFile;
-
-        // 8. Save report in repository
-        await _repo.SaveReportAsync(masterReport);
-
-        TempData["SuccessMessage"] = $"کارنامه جامع فَرادید صادر شد و در مسیر زیر ذخیره گردید:\n{exportFile}";
-        return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
     {
+        var project = await _repo.GetProjectByIdAsync(id);
+        if (project != null && !UserAccessHelper.CanAccessProject(User, project))
+        {
+            TempData["ErrorMessage"] = "شما مجوز حذف این پروژه را ندارید.";
+            return RedirectToAction(nameof(Index));
+        }
+
         await _repo.DeleteProjectAsync(id);
         TempData["SuccessMessage"] = "پروژه با موفقیت حذف گردید.";
         return RedirectToAction(nameof(Index));

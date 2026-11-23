@@ -214,15 +214,21 @@
 
                 <div class="collapse navbar-collapse" id="navbarMain">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">پیشخوان اصلی</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Project" asp-action="Index">پروژه‌های دیده‌بانی</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Project" asp-action="Create">ثبت پروژه جدید</a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">پیشخوان کاربری</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Project" asp-action="Index">@(Faradid.Web.Authentication.UserAccessHelper.IsAdmin(User) ? "همه پروژه‌ها" : "پروژه‌های من")</a>
+                            </li>
+                            @if (Faradid.Web.Authentication.UserAccessHelper.IsAdmin(User))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Project" asp-action="Create">ثبت پروژه جدید</a>
+                                </li>
+                            }
+                        }
                         <li class="nav-item">
                             <a class="nav-link" asp-controller="Home" asp-action="About">درباره سامانه</a>
                         </li>
@@ -231,21 +237,32 @@
                     <div class="d-flex align-items-center gap-3">
                         @if (User.Identity?.IsAuthenticated == true)
                         {
+                            var isAdmin = Faradid.Web.Authentication.UserAccessHelper.IsAdmin(User);
                             <div class="dropdown">
                                 <button class="btn btn-faradid-outline dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
-                                    <span class="badge bg-success rounded-circle" style="width: 8px; height: 8px; padding: 0;"> </span>
+                                    <span class="badge @(isAdmin ? "bg-danger" : "bg-info") rounded-circle" style="width: 8px; height: 8px; padding: 0;"> </span>
                                     <span>@User.Identity.Name</span>
+                                    <span class="badge @(isAdmin ? "bg-danger" : "bg-info text-dark")" style="font-size: 10px;">@(isAdmin ? "مدیر کل" : "کارفرما")</span>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end" style="background-color: var(--brand-card); border-color: var(--brand-border);">
-                                    <li><a class="dropdown-item text-light" asp-controller="Project" asp-action="Index">لیست پروژه‌ها</a></li>
+                                    <li class="px-3 py-2 border-bottom border-secondary">
+                                        <div class="small fw-bold text-light">@User.Identity.Name</div>
+                                        <div class="small text-secondary" style="font-size: 11px;">@(isAdmin ? "سطح دسترسی: نظارت و ممیزی نامحدود" : "سطح دسترسی: کارفرمای اختصاصی")</div>
+                                    </li>
+                                    <li><a class="dropdown-item text-light py-2" asp-controller="Project" asp-action="Index">@(isAdmin ? "مدیریت پروژه‌ها" : "مشاهده کارنامه‌های من")</a></li>
                                     <li><hr class="dropdown-divider border-secondary" /></li>
-                                    <li><a class="dropdown-item text-danger" asp-controller="Account" asp-action="Logout">خروج از حساب</a></li>
+                                    <li>
+                                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item text-danger py-2 w-100 text-start">خروج از حساب کاربری ↩</button>
+                                        </form>
+                                    </li>
                                 </ul>
                             </div>
                         }
                         else
                         {
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-faradid">ورود با Irres Gate</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-faradid">ورود به سامانه (Irres Gate)</a>
                         }
                     </div>
                 </div>
