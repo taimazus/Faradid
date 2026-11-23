@@ -18,7 +18,7 @@
             <p class="text-secondary small mb-0 mt-1">کارفرما: @Model.ClientName | صنعت: @Model.Industry</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="/ClientPortal/@Model.Id" target="_blank" class="btn btn-outline-info d-flex align-items-center gap-2">
+            <a href="/ClientPortal/@Model.Id?token=@Model.ClientPortalToken" target="_blank" class="btn btn-outline-info d-flex align-items-center gap-2">
                 <span>🌐 پورتال اختصاصی کارفرما (White-label)</span>
             </a>
             <a asp-action="Index" class="btn btn-faradid-outline">بازگشت به فهرست پروژه‌ها</a>
@@ -113,6 +113,44 @@
                         <div class="small text-light">@Model.Notes</div>
                     </div>
                 }
+
+                <!-- Client Portal Security & Token Box -->
+                <div class="mt-4 p-3 rounded-3" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(2, 132, 199, 0.3);">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small fw-bold text-info">🔐 پورتال اختصاصی کارفرما:</span>
+                        @if (Model.IsClientPortalEnabled)
+                        {
+                            <span class="badge bg-success-subtle text-success">فعال 🟢</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger-subtle text-danger">مسدود / غیرفعال 🔴</span>
+                        }
+                    </div>
+                    <div class="small text-secondary mb-2" style="font-size: 11.5px;">
+                        لینک امن رمزنگاری‌شده با توکن ۳۲ کاراکتری غیرقابل حدس:
+                    </div>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" id="portalShareLink" class="form-control bg-dark text-info font-monospace" style="font-size: 11px; direction: ltr;" value="@(Context.Request.Scheme)://@(Context.Request.Host)/ClientPortal/@Model.Id?token=@Model.ClientPortalToken" readonly />
+                        <button type="button" class="btn btn-outline-info" onclick="copyPortalLink()">📋 کپی</button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form asp-action="ToggleClientPortal" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm @(Model.IsClientPortalEnabled ? "btn-outline-danger" : "btn-outline-success") w-100" style="font-size: 11px;">
+                                @(Model.IsClientPortalEnabled ? "غیرفعال‌سازی موقت" : "فعال‌سازی پورتال")
+                            </button>
+                        </form>
+                        <form asp-action="RegenerateClientPortalToken" method="post" class="flex-grow-1">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="projectId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-sm btn-outline-warning w-100" style="font-size: 11px;" onclick="return confirm('آیا از باطل‌سازی لینک قبلی و تولید توکن نو اطمینان دارید؟')">
+                                🔄 تولید توکن نو
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -422,6 +460,14 @@
                     }
                 })
                 .catch(err => console.error('Error acknowledging alarm:', err));
+        }
+        function copyPortalLink() {
+            const el = document.getElementById('portalShareLink');
+            if (el) {
+                navigator.clipboard.writeText(el.value).then(() => {
+                    alert('لینک امن و اختصاصی پورتال کارفرما با موفقیت کپی شد.');
+                });
+            }
         }
     </script>
 }

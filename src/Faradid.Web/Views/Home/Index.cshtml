@@ -125,7 +125,7 @@
                                 <a asp-controller="Project" asp-action="Details" asp-route-id="@proj.Id" class="btn btn-sm btn-faradid-outline flex-grow-1">
                                     جزئیات و دیده‌بانی
                                 </a>
-                                <a href="/ClientPortal/@proj.Id" target="_blank" class="btn btn-sm btn-outline-info" title="پورتال اختصاصی وایت‌لیبل کارفرما">
+                                <a href="/ClientPortal/@proj.Id?token=@proj.ClientPortalToken" target="_blank" class="btn btn-sm btn-outline-info" title="پورتال اختصاصی وایت‌لیبل کارفرما">
                                     🌐 پورتال
                                 </a>
                                 <form asp-controller="Project" asp-action="GenerateReport" method="post" class="flex-grow-1">

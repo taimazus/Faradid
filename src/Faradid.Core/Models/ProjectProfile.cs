@@ -14,6 +14,8 @@ public sealed class ProjectProfile
     public string Notes { get; set; } = string.Empty;
     public string OwnerUsername { get; set; } = string.Empty;
     public string OwnerEmail { get; set; } = string.Empty;
+    public bool IsClientPortalEnabled { get; set; } = true;
+    public string ClientPortalToken { get; set; } = Guid.NewGuid().ToString("N");
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAtUtc { get; set; } = DateTime.UtcNow;
 }

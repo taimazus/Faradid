@@ -406,4 +406,66 @@ public sealed class ProjectController : Controller
 
         return RedirectToAction(nameof(Details), new { id = projectId });
     }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleClientPortal(Guid projectId)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!UserAccessHelper.CanAccessProject(User, project))
+            {
+                TempData["ErrorMessage"] = "شما مجوز تغییر تنظیمات دسترسی این پروژه را ندارید.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            project.IsClientPortalEnabled = !project.IsClientPortalEnabled;
+            project.UpdatedAtUtc = DateTime.UtcNow;
+            await _repo.SaveProjectAsync(project);
+
+            TempData["SuccessMessage"] = project.IsClientPortalEnabled
+                ? "دسترسی به پورتال کارفرما با موفقیت فعال گردید."
+                : "پورتال کارفرما با موفقیت غیرفعال و دسترسی عمومی به آن مسدود شد.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error toggling client portal for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در تغییر وضعیت پورتال: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Details), new { id = projectId });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> RegenerateClientPortalToken(Guid projectId)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!UserAccessHelper.CanAccessProject(User, project))
+            {
+                TempData["ErrorMessage"] = "شما مجوز تغییر تنظیمات دسترسی این پروژه را ندارید.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            project.ClientPortalToken = Guid.NewGuid().ToString("N");
+            project.UpdatedAtUtc = DateTime.UtcNow;
+            await _repo.SaveProjectAsync(project);
+
+            TempData["SuccessMessage"] = "توکن امنیتی پورتال بازنشانی شد. کلیه لینک‌های ارسالی قبلی باطل شدند.";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error regenerating client portal token for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در بازنشانی توکن: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Details), new { id = projectId });
+    }
 }

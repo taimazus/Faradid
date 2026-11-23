@@ -261,7 +261,21 @@ public sealed class JsonFileProjectRepository : IProjectRepository
         {
             if (!File.Exists(_projectsFilePath)) return Array.Empty<ProjectProfile>();
             var json = await File.ReadAllTextAsync(_projectsFilePath, ct);
-            return JsonSerializer.Deserialize<List<ProjectProfile>>(json, JsonOptions) ?? new List<ProjectProfile>();
+            var list = JsonSerializer.Deserialize<List<ProjectProfile>>(json, JsonOptions) ?? new List<ProjectProfile>();
+            var modified = false;
+            foreach (var p in list)
+            {
+                if (string.IsNullOrWhiteSpace(p.ClientPortalToken))
+                {
+                    p.ClientPortalToken = Guid.NewGuid().ToString("N");
+                    modified = true;
+                }
+            }
+            if (modified)
+            {
+                await File.WriteAllTextAsync(_projectsFilePath, JsonSerializer.Serialize(list, JsonOptions), ct);
+            }
+            return list;
         }
         catch (Exception ex)
         {

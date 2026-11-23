@@ -130,7 +130,7 @@
                 <div class="d-flex gap-2">
                     @if (r != null)
                     {
-                        <a href="/Report/ViewReport/@r.ReportId" class="btn-download-hero" target="_blank">
+                        <a href="/Report/ViewReport/@r.ReportId?token=@p.ClientPortalToken" class="btn-download-hero" target="_blank">
                             <span>📄 مشاهده کارنامه رسمی ۱۴ صفحه‌ای</span>
                         </a>
                     }
