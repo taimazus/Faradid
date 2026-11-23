@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Faradid.AI/Faradid.AI.csproj" />
+    <Project Path="src/Faradid.Core/Faradid.Core.csproj" />
+    <Project Path="src/Faradid.Engine/Faradid.Engine.csproj" />
+    <Project Path="src/Faradid.Web/Faradid.Web.csproj" />
+  </Folder>
+</Solution>
