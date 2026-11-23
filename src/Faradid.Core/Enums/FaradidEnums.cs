@@ -2,9 +2,11 @@ namespace Faradid.Core.Enums;
 
 public enum PersonaView
 {
-    Specialist = 1, // کارشناس ارشد سئو و زیرساخت فنی
-    Client = 2,     // کارفرما و ذینفع کسب‌وکار
-    Executive = 3   // مدیرعامل و هیئت مدیره
+    Specialist = 1,    // کارشناسان ارشد سئو
+    Client = 2,        // مشتریان و کارفرمایان
+    Executive = 3,     // مدیر کل و هیئت‌مدیره
+    Developer = 4,     // توسعه‌دهندگان وب و زیرساخت
+    Comprehensive = 5  // کارنامه جامع و کامل (شامل کلیه بخش‌ها)
 }
 
 public enum TrendDirection

@@ -17,17 +17,16 @@ public static class UserAccessHelper
         var email = user.FindFirst(ClaimTypes.Email)?.Value;
         if (!string.IsNullOrWhiteSpace(email) && email.Equals("admin@irres.ir", StringComparison.OrdinalIgnoreCase)) return true;
 
-        var name = user.Identity.Name ?? string.Empty;
-        if (name.Contains("سهند", StringComparison.OrdinalIgnoreCase) ||
-            name.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("مدیر", StringComparison.OrdinalIgnoreCase))
+        var username = user.FindFirst("Username")?.Value ?? string.Empty;
+        if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+            username.Equals("sahand", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }
 
-        var username = user.FindFirst("Username")?.Value ?? string.Empty;
-        if (username.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
-            username.Equals("sahand", StringComparison.OrdinalIgnoreCase))
+        var name = user.Identity.Name ?? string.Empty;
+        if (name.Equals("admin", StringComparison.OrdinalIgnoreCase) ||
+            name.Equals("مدیر کل راهکار الکترونیک سهند", StringComparison.OrdinalIgnoreCase))
         {
             return true;
         }

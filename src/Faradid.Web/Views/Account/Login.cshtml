@@ -5,7 +5,7 @@
     var returnUrl = ViewBag.ReturnUrl as string;
 }
 
-<div class="container py-5" style="max-width: 680px;">
+<div class="container py-5" style="max-width: 580px;">
     @if (TempData["ErrorMessage"] != null)
     {
         <div class="alert alert-danger d-flex align-items-center gap-2 mb-4 border-danger shadow-sm">
@@ -23,122 +23,57 @@
 
     <div class="card-faradid p-4 p-md-5">
         <div class="text-center mb-4">
-            <img src="~/images/brand/faradid-logo.png" alt="فَرادید" style="width: 84px; height: 84px; border-radius: 20px; box-shadow: 0 0 30px rgba(0, 229, 255, 0.45);" />
+            <img src="~/images/brand/faradid-logo.png" alt="فَرادید" style="width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 0 35px rgba(0, 229, 255, 0.45);" />
             <h2 class="fw-bolder mt-3 mb-1 text-light">ورود به سامانه <span style="color: #ef4444;">فَرا</span>دید</h2>
-            <p class="text-secondary small mb-0">درگاه امن احراز هویت متمرکز راهکار الکترونیک سهند و پرتال اختصاصی کارفرمایان</p>
+            <p class="text-secondary small mb-0">درگاه امن احراز هویت متمرکز راهکار الکترونیک سهند و پرتال کارفرمایان</p>
         </div>
 
-        <div class="alert alert-dark text-start small mb-4" style="background-color: rgba(15, 23, 42, 0.8); border: 1px solid var(--brand-border); color: #cbd5e1;">
+        <div class="alert alert-dark text-start small mb-4" style="background-color: rgba(15, 23, 42, 0.85); border: 1px solid var(--brand-border); color: #cbd5e1;">
             <div class="d-flex align-items-center gap-2 mb-1 text-info fw-bold">
                 <span>🔒</span>
-                <span>تفکیک امنیتی و محرمانگی پروژه‌ها:</span>
+                <span>تفکیک امنیتی و احراز هویت الزامی:</span>
             </div>
-            جهت حفظ محرمانگی راهبردهای سئو و ترافیک رقابتی، دسترسی به داشبورد و کارنامه‌ها کاملاً بر اساس هویت کاربر تفکیک شده است و هر کارفرما صرفاً به پروژه‌ها و گزارش‌های مجاز خود دسترسی خواهد داشت.
+            جهت حفظ محرمانگی داده‌های رقابتی، دسترسی به پنل دیده‌بانی منوط به ورود موفق از طریق احراز هویت مرکزی یا اعتبارسنجی رمز عبور سازمانی است.
         </div>
 
         <!-- 1. Central SSO Authentication -->
         <div class="mb-4">
-            <h6 class="text-secondary fw-bold mb-2">روش اول: ورود با سامانه هویت مرکزی سهند (SSO)</h6>
+            <h6 class="text-secondary fw-bold mb-2">روش اول: احراز هویت متمرکز (SSO)</h6>
             <form asp-action="SsoRedirect" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
                 <button type="submit" class="btn btn-faradid btn-lg w-100 d-flex align-items-center justify-content-center gap-2 shadow">
-                    <span>🔐 ورود یکپارچه با Irres Gate (@config.Authority)</span>
+                    <span>🔐 ورود با سامانه هویت مرکزی سهند (Irres Gate)</span>
                 </button>
             </form>
         </div>
 
         <div class="position-relative text-center my-4">
             <hr class="border-secondary opacity-25" />
-            <span class="position-absolute top-50 start-50 translate-middle px-3 bg-dark text-muted small" style="border-radius: 20px; border: 1px solid var(--brand-border);">یا ورود مستقیم با نام کاربری</span>
+            <span class="position-absolute top-50 start-50 translate-middle px-3 bg-dark text-muted small" style="border-radius: 20px; border: 1px solid var(--brand-border);">یا ورود با شناسه و رمز عبور</span>
         </div>
 
         <!-- 2. Direct Credentials / Account Login -->
-        <div class="mb-4">
-            <h6 class="text-secondary fw-bold mb-2">روش دوم: ورود مستقیم کارشناسان و کارفرمایان</h6>
+        <div>
+            <h6 class="text-secondary fw-bold mb-2">روش دوم: ورود با نام کاربری و رمز عبور سازمانی</h6>
             <form asp-action="DirectLogin" method="post">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="returnUrl" value="@returnUrl" />
                 
                 <div class="mb-3">
                     <label class="form-label text-light small fw-bold">نام کاربری یا شناسه سازمانی:</label>
-                    <input type="text" name="username" class="form-control bg-dark text-light border-secondary" placeholder="مثال: admin یا yonarak یا asazist" required />
+                    <input type="text" name="username" class="form-control bg-dark text-light border-secondary" placeholder="نام کاربری (مثال: admin یا yonarak)" required autocomplete="username" />
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label text-light small fw-bold">رمز عبور سازمانی:</label>
-                    <input type="password" name="password" class="form-control bg-dark text-light border-secondary" placeholder="••••••••" />
-                    <div class="form-text text-muted small">برای دسترسی‌های تستی و مجاز، درج رمز عبور اختیاری است.</div>
+                    <label class="form-label text-light small fw-bold">رمز عبور امنیتی:</label>
+                    <input type="password" name="password" class="form-control bg-dark text-light border-secondary" placeholder="••••••••••••" required autocomplete="current-password" />
                 </div>
 
-                <button type="submit" class="btn btn-faradid-outline w-100 py-2 fw-bold text-light">
-                    ورود به پنل کاربری ↵
+                <button type="submit" class="btn btn-faradid-outline w-100 py-2 fw-bold text-light d-flex align-items-center justify-content-center gap-2">
+                    <span>ورود به پنل کاربری ↵</span>
                 </button>
             </form>
-        </div>
-
-        <!-- 3. Fast Account Switcher for Demo / Immediate Access -->
-        <div class="border-top border-secondary pt-3 mt-4">
-            <div class="small text-secondary mb-3 fw-bold">⚡ انتخاب سریع حساب کاربری جهت بررسی سطح دسترسی:</div>
-            <div class="d-flex flex-column gap-2">
-                <form asp-action="DirectLogin" method="post" class="m-0">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="returnUrl" value="@returnUrl" />
-                    <input type="hidden" name="username" value="admin" />
-                    <input type="hidden" name="role" value="Admin" />
-                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 text-start d-flex justify-content-between align-items-center p-2">
-                        <span>👑 <strong>مدیر کل و متخصص سئو سهند</strong> (دسترسی نامحدود به تمامی ۵ پروژه)</span>
-                        <span class="badge bg-danger">Admin</span>
-                    </button>
-                </form>
-
-                <div class="row g-2">
-                    <div class="col-6">
-                        <form asp-action="DirectLogin" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
-                            <input type="hidden" name="username" value="yonarak" />
-                            <button type="submit" class="btn btn-sm btn-outline-info w-100 text-start p-2">
-                                🧗‍♂️ <strong>کارفرمای یونارک</strong>
-                                <div class="text-muted" style="font-size: 11px;">فقط yonarak.ir</div>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="col-6">
-                        <form asp-action="DirectLogin" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
-                            <input type="hidden" name="username" value="asazist" />
-                            <button type="submit" class="btn btn-sm btn-outline-success w-100 text-start p-2">
-                                🏥 <strong>کارفرمای آسا زیست</strong>
-                                <div class="text-muted" style="font-size: 11px;">فقط asazist.com</div>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="col-6">
-                        <form asp-action="DirectLogin" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
-                            <input type="hidden" name="username" value="spinora" />
-                            <button type="submit" class="btn btn-sm btn-outline-warning w-100 text-start p-2">
-                                🧸 <strong>کارفرمای اسپینورا</strong>
-                                <div class="text-muted" style="font-size: 11px;">فقط spinora.ir</div>
-                            </button>
-                        </form>
-                    </div>
-                    <div class="col-6">
-                        <form asp-action="DirectLogin" method="post" class="m-0">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
-                            <input type="hidden" name="username" value="tbztv" />
-                            <button type="submit" class="btn btn-sm btn-outline-primary w-100 text-start p-2">
-                                📺 <strong>کارفرمای تلویزیون تبریز</strong>
-                                <div class="text-muted" style="font-size: 11px;">فقط tbztvrepair.ir</div>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>

@@ -1,31 +1,256 @@
-html {
-  font-size: 14px;
+/* Faradid High-Contrast & Accessibility Design System (WCAG AA Compliant) */
+
+:root {
+    --brand-primary: #9e1b32;
+    --brand-primary-hover: #dc2626;
+    --brand-accent: #00e5ff;
+    --brand-bg: #080c14;
+    --brand-surface: #0f172a;
+    --brand-card: #131d31;
+    --brand-border: #334155;
+    --brand-text: #f8fafc;
+    --brand-text-bright: #ffffff;
+    --brand-muted: #cbd5e1;
+    --brand-cyan: #38bdf8;
+    --brand-success: #4ade80;
+    --brand-warning: #fbbf24;
+    --brand-danger: #f87171;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+* {
+    box-sizing: border-box;
+    font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
-  margin-bottom: 60px;
+    background-color: var(--brand-bg);
+    color: var(--brand-text);
+    margin: 0;
+    padding: 0;
+    direction: rtl;
+    text-align: right;
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.8;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+/* ==========================================================================
+   High-Contrast Typography Overrides (WCAG AA Compliant)
+   ========================================================================== */
+.text-secondary {
+    color: #cbd5e1 !important; /* Minimum 7.5:1 contrast against dark surfaces */
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.text-muted {
+    color: #94a3b8 !important; /* Minimum 4.8:1 contrast */
+}
+
+.text-light {
+    color: #ffffff !important;
+}
+
+.text-info {
+    color: #38bdf8 !important;
+}
+
+.text-warning {
+    color: #fbbf24 !important;
+}
+
+.text-success {
+    color: #4ade80 !important;
+}
+
+.text-danger {
+    color: #f87171 !important;
+}
+
+/* Card Styling */
+.card-faradid {
+    background-color: var(--brand-card);
+    border: 1px solid var(--brand-border);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    color: var(--brand-text);
+}
+
+/* Table High-Contrast Overrides */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f8fafc;
+    --bs-table-border-color: #334155;
+    color: #f8fafc;
+}
+
+.table th {
+    color: #93c5fd !important;
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    font-weight: 700;
+    border-bottom: 2px solid #475569 !important;
+    padding: 12px 14px;
+}
+
+.table td {
+    color: #f1f5f9 !important;
+    border-bottom: 1px solid #334155;
+    padding: 12px 14px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Code & Pre Blocks */
+code, pre {
+    font-family: 'Consolas', 'Courier New', monospace;
+    direction: ltr;
+    text-align: left;
+}
+
+pre {
+    background-color: #0b0f19;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 14px;
+    color: #38bdf8;
+    overflow-x: auto;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+    border: 1px solid #334155 !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #38bdf8 !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+
+/* Persona Switcher Tabs */
+.persona-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.persona-pill {
+    cursor: pointer;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--brand-border);
+    background-color: var(--brand-surface);
+    color: #cbd5e1 !important;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.persona-pill:hover {
+    background-color: #1e293b;
+    color: #ffffff !important;
+    border-color: #64748b;
+}
+
+.persona-pill.active {
+    background-color: var(--brand-primary);
+    color: #ffffff !important;
+    border-color: #ef4444;
+    box-shadow: 0 0 16px rgba(239, 68, 68, 0.45);
+}
+
+/* ==========================================================================
+   Print & PDF Generation Styling (A4 Formal Executive Binders)
+   ========================================================================== */
+@media print {
+    @page {
+        size: A4 portrait;
+        margin: 10mm 15mm 15mm 15mm;
+    }
+
+    body {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        font-size: 12px;
+        line-height: 1.6;
+    }
+
+    /* Hide non-printable UI elements */
+    header, nav, .navbar-faradid, footer, .footer-faradid,
+    .no-print, .persona-nav, .btn, .alert-dismissible .btn-close {
+        display: none !important;
+    }
+
+    .container, .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .card-faradid {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
+        border-radius: 6px !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px !important;
+        padding: 18px !important;
+    }
+
+    .a4-page-break {
+        page-break-before: always !important;
+        break-before: page !important;
+    }
+
+    .text-secondary, .text-muted {
+        color: #334155 !important;
+    }
+
+    .text-light {
+        color: #0f172a !important;
+    }
+
+    .table {
+        color: #0f172a !important;
+    }
+
+    .table th {
+        background-color: #f1f5f9 !important;
+        color: #0f172a !important;
+        border: 1px solid #94a3b8 !important;
+    }
+
+    .table td {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+    }
+
+    .badge {
+        border: 1px solid #475569 !important;
+        color: #0f172a !important;
+        background: transparent !important;
+    }
+
+    /* Print Header & Footer */
+    .print-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid #9e1b32;
+        padding-bottom: 12px;
+        margin-bottom: 20px;
+    }
+
+    .print-logo {
+        width: 50px;
+        height: 50px;
+    }
 }

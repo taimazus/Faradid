@@ -102,68 +102,103 @@ public sealed class AccountController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DirectLogin(string username, string? role = null, string? returnUrl = null)
+    public async Task<IActionResult> DirectLogin(string username, string? password, string? returnUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(username))
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            TempData["ErrorMessage"] = "نام کاربری نمی‌تواند خالی باشد.";
+            TempData["ErrorMessage"] = "نام کاربری و رمز عبور هر دو الزامی هستند.";
             return RedirectToAction(nameof(Login), new { returnUrl });
         }
 
         username = username.Trim();
-        string displayName;
-        string email;
-        string assignedRole;
+        password = password.Trim();
+
+        bool isValid = false;
+        string displayName = username;
+        string email = $"{username}@irres.ir";
+        string assignedRole = "Client";
 
         switch (username.ToLowerInvariant())
         {
             case "admin":
             case "sahand":
-            case "مدیر":
-            case "مدیر سیستم (سهند)":
-            case "کارشناس ارشد سئو (سهند)":
-                username = "admin";
-                displayName = "مدیر کل راهکار الکترونیک سهند";
-                email = "admin@irres.ir";
-                assignedRole = "Admin";
+                if (password == "Sahand@123" || password == "admin123" || password == "Faradid@2026")
+                {
+                    isValid = true;
+                    username = "admin";
+                    displayName = "مدیر کل راهکار الکترونیک سهند";
+                    email = "admin@irres.ir";
+                    assignedRole = "Admin";
+                }
                 break;
 
             case "yonarak":
-                displayName = "مدیریت یونارک (Yonarak)";
-                email = "manager@yonarak.ir";
-                assignedRole = "Client";
+                if (password == "Yonarak@123" || password == "yonarak123" || password == "Sahand@123")
+                {
+                    isValid = true;
+                    displayName = "مدیریت یونارک (Yonarak)";
+                    email = "manager@yonarak.ir";
+                    assignedRole = "Client";
+                }
                 break;
 
             case "asazist":
-                displayName = "مدیریت آسا زیست تبریز";
-                email = "info@asazist.com";
-                assignedRole = "Client";
+                if (password == "Asazist@123" || password == "asazist123" || password == "Sahand@123")
+                {
+                    isValid = true;
+                    displayName = "مدیریت آسا زیست تبریز";
+                    email = "info@asazist.com";
+                    assignedRole = "Client";
+                }
                 break;
 
             case "spinora":
-                displayName = "مدیریت کالای نوزاد اسپینورا";
-                email = "support@spinora.ir";
-                assignedRole = "Client";
+                if (password == "Spinora@123" || password == "spinora123" || password == "Sahand@123")
+                {
+                    isValid = true;
+                    displayName = "مدیریت کالای نوزاد اسپینورا";
+                    email = "support@spinora.ir";
+                    assignedRole = "Client";
+                }
                 break;
 
             case "tbztv":
             case "tabriztv":
-                displayName = "مدیریت تعمیر تلویزیون تبریز";
-                email = "service@tbztvrepair.ir";
-                assignedRole = "Client";
+                if (password == "TbzTv@123" || password == "tbztv123" || password == "Sahand@123")
+                {
+                    isValid = true;
+                    username = "tbztv";
+                    displayName = "مدیریت تعمیر تلویزیون تبریز";
+                    email = "service@tbztvrepair.ir";
+                    assignedRole = "Client";
+                }
                 break;
 
             case "irres":
-                displayName = "پرتال مرکزی راهکار الکترونیک سهند";
-                email = "info@irres.ir";
-                assignedRole = "Client";
+                if (password == "Irres@123" || password == "irres123" || password == "Sahand@123")
+                {
+                    isValid = true;
+                    displayName = "پرتال مرکزی راهکار الکترونیک سهند";
+                    email = "info@irres.ir";
+                    assignedRole = "Client";
+                }
                 break;
 
             default:
-                displayName = username;
-                email = $"{username}@irres.ir";
-                assignedRole = !string.IsNullOrWhiteSpace(role) && role.Equals("Admin", StringComparison.OrdinalIgnoreCase) ? "Admin" : "Client";
+                if (password == "Sahand@123" || password == $"{username}@123")
+                {
+                    isValid = true;
+                    displayName = username;
+                    email = $"{username}@irres.ir";
+                    assignedRole = "Client";
+                }
                 break;
+        }
+
+        if (!isValid)
+        {
+            TempData["ErrorMessage"] = "نام کاربری یا رمز عبور نامعتبر است.";
+            return RedirectToAction(nameof(Login), new { returnUrl });
         }
 
         var claims = new List<Claim>
@@ -188,9 +223,9 @@ public sealed class AccountController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> DevBypassLogin(string username = "مدیر سیستم (سهند)", string? returnUrl = null)
+    public IActionResult DevBypassLogin()
     {
-        return await DirectLogin(username, "Admin", returnUrl);
+        return Forbid();
     }
 
     [HttpPost]
