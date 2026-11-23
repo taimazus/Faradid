@@ -5,18 +5,18 @@
 
 <div class="container-fluid px-lg-5 py-4">
     <!-- Hero Banner -->
-    <div class="card-faradid p-4 p-lg-5 mb-5" style="background: radial-gradient(circle at 10% 20%, rgba(158, 27, 50, 0.25) 0%, rgba(17, 24, 39, 0.95) 70%);">
-        <div class="row align-items-center">
+    <div class="card-faradid p-4 p-lg-5 mb-5" style="background: radial-gradient(circle at 10% 20%, rgba(158, 27, 50, 0.3) 0%, rgba(17, 24, 39, 0.98) 75%);">
+        <div class="row align-items-center g-4">
             <div class="col-lg-8">
                 <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background: rgba(0, 229, 255, 0.1); border: 1px solid rgba(0, 229, 255, 0.3); color: #00e5ff; font-size: 13px; font-weight: 700;">
-                    <span class="spinner-grow spinner-grow-sm" role="status"></span>
+                    <span class="spinner-grow spinner-grow-sm text-info" role="status"></span>
                     سامانه هوشمند تحلیل داده، دیده‌بانی سئو و صدور کارنامه سازمانی
                 </div>
-                <h1 class="display-5 fw-bolder mb-3" style="letter-spacing: -1px;">
-                    فَرا<span style="color: var(--brand-primary);">دید</span>؛ دیده‌بانی فراتر از ابزارها
+                <h1 class="display-5 fw-bolder mb-3 text-light" style="letter-spacing: -1px;">
+                    فَرا<span style="color: #ef4444;">دید</span>؛ دیده‌بانی فراتر از ابزارها
                 </h1>
-                <p class="lead text-light mb-4" style="line-height: 1.9; max-width: 780px;">
-                    سکوی جامع و خودکار تولید کارنامه‌های استراتژیک سئو بر بستر دات‌نت ۱۰. تحلیل عمیق جریان داده‌های سرچ کنسول گوگل، بازرسی بلادرنگ کدهای محلی پروژه (<code style="color: #00e5ff;">web.config</code>، ریدایرکت‌ها، متادیتا و اسکیما)، کشف ناهنجاری ترافیک فیلترشکن‌ها و ترسیم ماتریس ۶ محوره برتری بر رقبا همراه با تقویم سردبیری هوش مصنوعی.
+                <p class="lead text-light mb-4" style="line-height: 1.9; max-width: 800px; font-size: 16px; opacity: 0.92;">
+                    سکوی جامع و خودکار تولید کارنامه‌های استراتژیک سئو بر بستر دات‌نت ۱۰. تحلیل عمیق جریان داده‌های سرچ کنسول گوگل، بازرسی بلادرنگ کدهای محلی پروژه (<code style="color: #00e5ff; background: rgba(0,229,255,0.1); padding: 2px 6px; border-radius: 4px;">web.config</code>، ریدایرکت‌ها، متادیتا و اسکیما)، کشف ناهنجاری ترافیک فیلترشکن‌ها و ترسیم ماتریس ۶ محوره برتری بر رقبا همراه با تقویم سردبیری هوش مصنوعی.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a asp-controller="Project" asp-action="Create" class="btn btn-faradid btn-lg d-flex align-items-center gap-2">
@@ -27,34 +27,36 @@
                     </a>
                 </div>
             </div>
-            <div class="col-lg-4 text-center mt-4 mt-lg-0">
-                <img src="~/images/brand/faradid-logo.png" alt="فَرادید" class="img-fluid rounded-4 shadow-lg" style="max-height: 260px; box-shadow: 0 0 35px rgba(0, 229, 255, 0.25) !important;" />
+            <div class="col-lg-4 text-center">
+                <div class="hero-logo-box">
+                    <img src="~/images/brand/faradid-logo.png" alt="فَرادید" class="hero-logo-img" />
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Quick Stats -->
     <div class="row g-3 mb-5">
-        <div class="col-md-3">
-            <div class="card-faradid p-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card-faradid p-4 h-100">
                 <div class="text-secondary small mb-1">پروژه‌های فعال تحت مانیتورینگ</div>
                 <div class="fs-2 fw-bolder text-light">@Model.Count <span class="fs-6 fw-normal text-muted">دامنه سازمانی</span></div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-faradid p-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card-faradid p-4 h-100">
                 <div class="text-secondary small mb-1">تحلیل ناهنجاری شبکه و VPN</div>
                 <div class="fs-2 fw-bolder" style="color: #00e5ff;">۴۸٪ <span class="fs-6 fw-normal text-muted">سهم ترافیک DEU</span></div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-faradid p-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card-faradid p-4 h-100">
                 <div class="text-secondary small mb-1">میانگین سلامت کدهای محلی</div>
                 <div class="fs-2 fw-bolder text-success">۹۲/۱۰۰ <span class="fs-6 fw-normal text-muted">تطابق معماری</span></div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card-faradid p-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card-faradid p-4 h-100">
                 <div class="text-secondary small mb-1">تقویم محتوای راهبردی هوش مصنوعی</div>
                 <div class="fs-2 fw-bolder text-warning">۴ مقاله <span class="fs-6 fw-normal text-muted">ماهانه برای هر دامنه</span></div>
             </div>
@@ -64,7 +66,7 @@
     <!-- Flagship Projects Grid -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h3 class="fw-bold mb-1">پروژه‌های دیده‌بانی شده فعال</h3>
+            <h3 class="fw-bold mb-1 text-light">پروژه‌های دیده‌بانی شده فعال</h3>
             <p class="text-secondary small mb-0">کارنامه‌های سئو، ممیزی کدهای محلی و تقویم سردبیری وب‌سایت‌های سازمانی</p>
         </div>
         <a asp-controller="Project" asp-action="Create" class="btn btn-sm btn-faradid">افزودن سایت جدید +</a>
@@ -77,13 +79,13 @@
                 <div class="card-faradid h-100 p-4 d-flex flex-column">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1">@proj.Name</h5>
-                            <a href="https://@proj.Domain" target="_blank" class="small text-decoration-none" style="color: #00e5ff;">@proj.Domain ↗</a>
+                            <h5 class="fw-bold mb-1 text-light">@proj.Name</h5>
+                            <a href="https://@proj.Domain" target="_blank" class="small text-decoration-none fw-semibold" style="color: #00e5ff;">@proj.Domain ↗</a>
                         </div>
                         <span class="badge bg-dark border border-secondary text-light">@proj.Industry.Split(' ')[0]</span>
                     </div>
 
-                    <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.7;">
+                    <p class="small text-secondary mb-3 flex-grow-1" style="line-height: 1.8;">
                         @proj.Notes
                     </p>
 
@@ -115,31 +117,31 @@
 
     <!-- System Architecture Modules -->
     <div class="card-faradid p-4 p-lg-5 mb-5">
-        <h4 class="fw-bold mb-4 border-end border-4 border-danger pe-3">ماژول‌های چهارگانه موتور هوشمند فَرادید</h4>
+        <h4 class="fw-bold mb-4 border-end border-4 border-danger pe-3 text-light">ماژول‌های چهارگانه موتور هوشمند فَرادید</h4>
         <div class="row g-4">
             <div class="col-md-6 col-lg-3">
-                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--brand-border);">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
                     <div class="fs-3 mb-2">📊</div>
                     <h6 class="fw-bold text-light">موتور تجمیع سرچ کنسول</h6>
                     <p class="small text-secondary mb-0">ایمپورت آنی CSV/JSON و تجمیع خودکار کوئری‌ها، صفحات هدف، دیوایس‌ها و کشورها با مقایسه ماه‌به‌ماه.</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
-                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--brand-border);">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
                     <div class="fs-3 mb-2">🔍</div>
                     <h6 class="fw-bold text-light">ممیزی کدهای محلی (Source Auditor)</h6>
                     <p class="small text-secondary mb-0">پیمایش خودکار دایرکتوری سورس‌کد، بررسی ریدایرکت‌های web.config، صفحات ۴۰۴، کانونیکال و اسکیما.</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
-                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--brand-border);">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
                     <div class="fs-3 mb-2">⚔️</div>
                     <h6 class="fw-bold text-light">ماتریس ۶ محوره کالبدشکافی رقبا</h6>
                     <p class="small text-secondary mb-0">سنجش سهم صدا، نمایه بک‌لینک، سرعت Core Web Vitals و تدوین استراتژی تهاجمی تصاحب رتبه.</p>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
-                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--brand-border);">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
                     <div class="fs-3 mb-2">🧠</div>
                     <h6 class="fw-bold text-light">دستیار هوش مصنوعی و تقویم سردبیری</h6>
                     <p class="small text-secondary mb-0">تحلیل روایی اختصاصی برای هر پرسونای سازمانی و طراحی ۴ مقاله ماهانه با نیت جستجوی خریدار.</p>

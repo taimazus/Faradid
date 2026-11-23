@@ -5,16 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - فَرادید (Faradid) | سامانه هوشمند دیده‌بانی سئو</title>
     
-    <!-- Vazirmatn Google/CDN Font -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" />
+    <!-- 1. Local Vazirmatn Font (Zero CDN Dependency) -->
+    <link rel="stylesheet" href="~/css/vazirmatn.css" asp-append-version="true" />
     
-    <!-- Bootstrap 5.3 RTL -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" integrity="sha384-dpuaG1suU0eT09tx5plTaGMLBsfDLzUUCIEKYo864SZ34z5dJ2Rm0AF55j1z3Z5q" crossorigin="anonymous" />
+    <!-- 2. Local Bootstrap 5.3 RTL (Zero CDN Dependency) -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.rtl.min.css" asp-append-version="true" />
     
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- 3. Local Site CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- 4. Local Chart.js -->
+    <script src="~/lib/chartjs/chart.umd.min.js" asp-append-version="true"></script>
 
     <link rel="icon" type="image/png" href="~/favicon.png" />
+    <link rel="shortcut icon" href="~/favicon.ico" />
 
     <style>
         :root {
@@ -23,34 +27,47 @@
             --brand-accent: #00e5ff;
             --brand-bg: #0b0f19;
             --brand-surface: #111827;
-            --brand-card: #1a2234;
-            --brand-border: #28354f;
-            --brand-text: #f3f4f6;
+            --brand-card: #162032;
+            --brand-border: #223049;
+            --brand-text: #f8fafc;
             --brand-muted: #94a3b8;
         }
 
-        body {
+        /* Robust Reset and Core Styling */
+        * {
+            box-sizing: border-box;
             font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
             background-color: var(--brand-bg);
             color: var(--brand-text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            margin: 0;
+            padding: 0;
+            direction: rtl;
+            text-align: right;
         }
 
+        /* Navbar */
         .navbar-faradid {
-            background-color: rgba(17, 24, 39, 0.95);
-            backdrop-filter: blur(12px);
+            background-color: #0f172a;
             border-bottom: 1px solid var(--brand-border);
             padding: 12px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
 
         .brand-badge-logo {
             width: 44px;
             height: 44px;
-            border-radius: 10px;
-            object-fit: cover;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            border-radius: 12px;
+            object-fit: contain;
+            background: transparent;
+            filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.4));
         }
 
         .brand-text-title {
@@ -61,7 +78,7 @@
         }
 
         .brand-text-highlight {
-            color: var(--brand-primary);
+            color: #ef4444;
         }
 
         .nav-link {
@@ -74,14 +91,15 @@
 
         .nav-link:hover, .nav-link.active {
             color: #ffffff !important;
-            background-color: rgba(158, 27, 50, 0.2);
+            background-color: rgba(158, 27, 50, 0.25);
         }
 
+        /* Cards */
         .card-faradid {
             background-color: var(--brand-card);
             border: 1px solid var(--brand-border);
             border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s, border-color 0.2s;
         }
 
@@ -89,38 +107,46 @@
             border-color: #3b82f6;
         }
 
+        /* Buttons */
         .btn-faradid {
             background-color: var(--brand-primary);
-            color: #ffffff;
+            color: #ffffff !important;
             border: none;
             font-weight: 700;
             padding: 10px 22px;
             border-radius: 8px;
             transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-faradid:hover {
             background-color: var(--brand-primary-hover);
-            color: #ffffff;
-            box-shadow: 0 0 16px rgba(158, 27, 50, 0.5);
+            box-shadow: 0 0 16px rgba(158, 27, 50, 0.6);
         }
 
         .btn-faradid-outline {
             background: transparent;
-            color: var(--brand-text);
+            color: var(--brand-text) !important;
             border: 1px solid var(--brand-border);
             font-weight: 600;
             padding: 10px 20px;
             border-radius: 8px;
             transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-faradid-outline:hover {
             background: rgba(255, 255, 255, 0.05);
             border-color: #64748b;
-            color: #ffffff;
         }
 
+        /* Footer */
         .footer-faradid {
             margin-top: auto;
             border-top: 1px solid var(--brand-border);
@@ -133,30 +159,48 @@
         /* Persona Switcher Tabs */
         .persona-pill {
             cursor: pointer;
-            padding: 10px 20px;
+            padding: 8px 18px;
             border-radius: 10px;
             border: 1px solid var(--brand-border);
             background-color: var(--brand-surface);
-            color: var(--brand-muted);
+            color: var(--brand-muted) !important;
             font-weight: 600;
+            font-size: 13px;
             transition: all 0.2s;
             text-decoration: none;
+            display: inline-flex;
+            align-items: center;
         }
 
         .persona-pill.active {
             background-color: var(--brand-primary);
-            color: #ffffff;
+            color: #ffffff !important;
             border-color: var(--brand-primary);
-            box-shadow: 0 0 12px rgba(158, 27, 50, 0.4);
+            box-shadow: 0 0 12px rgba(158, 27, 50, 0.5);
+        }
+
+        /* Hero Image Fix */
+        .hero-logo-box {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-logo-img {
+            max-width: 240px;
+            height: auto;
+            border-radius: 24px;
+            filter: drop-shadow(0 0 25px rgba(0, 229, 255, 0.45));
+            background: transparent;
         }
     </style>
     @RenderSection("Styles", required: false)
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-faradid sticky-top">
+        <nav class="navbar navbar-expand-lg navbar-faradid">
             <div class="container-fluid px-lg-5">
-                <a class="navbar-brand d-flex align-items-center gap-3" asp-controller="Home" asp-action="Index">
+                <a class="navbar-brand d-flex align-items-center gap-3 text-decoration-none" asp-controller="Home" asp-action="Index">
                     <img src="~/images/brand/faradid-logo.png" alt="فَرادید" class="brand-badge-logo" />
                     <div>
                         <div class="brand-text-title">فَرا<span class="brand-text-highlight">دید</span></div>
@@ -164,7 +208,7 @@
                     </div>
                 </a>
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler text-light border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -247,8 +291,8 @@
         </div>
     </footer>
 
-    <!-- Bootstrap 5.3 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Local Bootstrap 5.3 JS Bundle (Zero CDN Dependency) -->
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>
