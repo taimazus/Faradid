@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Faradid.Core.Enums;
 using Faradid.Core.Interfaces;
+using Faradid.Engine;
 using Faradid.Web.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,12 +37,13 @@ public sealed class ReportController : Controller
             report.ActivePersona = p;
         }
 
+        ViewBag.ActivePersona = persona?.ToLowerInvariant() ?? "all";
         ViewBag.IsAdmin = UserAccessHelper.IsAdmin(User);
         return View(report);
     }
 
     [HttpGet]
-    public async Task<IActionResult> Download(Guid id)
+    public async Task<IActionResult> Download(Guid id, string? persona = null)
     {
         var report = await _repo.GetReportByIdAsync(id);
         if (report == null) return NotFound();
@@ -51,13 +53,11 @@ public sealed class ReportController : Controller
             return Forbid();
         }
 
-        if (string.IsNullOrWhiteSpace(report.ExportPath) || !System.IO.File.Exists(report.ExportPath))
-        {
-            return NotFound("فایل گزارش یافت نشد.");
-        }
-
-        var bytes = await System.IO.File.ReadAllBytesAsync(report.ExportPath);
-        var fileName = Path.GetFileName(report.ExportPath);
-        return File(bytes, "text/html", fileName);
+        var safePersona = !string.IsNullOrWhiteSpace(persona) ? persona.ToLowerInvariant() : "all";
+        var html = HtmlReportExporter.GenerateHtmlContent(report);
+        
+        var bytes = System.Text.Encoding.UTF8.GetBytes(html);
+        var fileName = $"Faradid-Report-{report.Project.Domain.Replace(".", "-")}-{safePersona}.html";
+        return File(bytes, "text/html; charset=utf-8", fileName);
     }
 }

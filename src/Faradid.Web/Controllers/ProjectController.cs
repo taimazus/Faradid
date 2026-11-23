@@ -108,6 +108,16 @@ public sealed class ProjectController : Controller
         return View(project);
     }
 
+    [HttpGet]
+    public IActionResult GenerateReport(Guid? projectId)
+    {
+        if (projectId.HasValue)
+        {
+            return RedirectToAction(nameof(Details), new { id = projectId.Value });
+        }
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> GenerateReport(Guid projectId, string? gscCsvContent = null, string? persona = "Executive")
@@ -172,7 +182,7 @@ public sealed class ProjectController : Controller
 
             // 7. Export HTML safely to target destination
             var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
-                ? project.TargetReportPath
+                ? (Path.IsPathRooted(project.TargetReportPath) ? project.TargetReportPath : Path.Combine(AppContext.BaseDirectory, project.TargetReportPath))
                 : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
 
             var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
