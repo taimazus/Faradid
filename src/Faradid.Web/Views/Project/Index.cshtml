@@ -1,0 +1,64 @@
+@model IReadOnlyList<ProjectProfile>
+@{
+    ViewData["Title"] = "فهرست پروژه‌های دیده‌بانی سئو";
+}
+
+<div class="container-fluid px-lg-5 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">پروژه‌های دیده‌بانی سئو و ممیزی وب</h2>
+            <p class="text-secondary small mb-0">مدیریت دامنه‌ها، تنظیم مسیر کدهای محلی و صدور کارنامه‌های تحلیلی دوره‌ای</p>
+        </div>
+        <a asp-action="Create" class="btn btn-faradid d-flex align-items-center gap-2">
+            <span>+ ثبت دامنه جدید</span>
+        </a>
+    </div>
+
+    <div class="card-faradid p-3">
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>پروژه و عنوان کسب‌وکار</th>
+                        <th>دامنه و آدرس سایت</th>
+                        <th>کارفرما / ذینفع</th>
+                        <th>حوزه صنعت</th>
+                        <th>مسیر سورس‌کد محلی</th>
+                        <th class="text-center">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var p in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-light">@p.Name</div>
+                                <div class="small text-muted" style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@p.Notes</div>
+                            </td>
+                            <td>
+                                <a href="https://@p.Domain" target="_blank" class="text-decoration-none fw-semibold" style="color: #00e5ff;">@p.Domain ↗</a>
+                            </td>
+                            <td>@p.ClientName</td>
+                            <td><span class="badge bg-dark border border-secondary text-light">@p.Industry</span></td>
+                            <td>
+                                <span class="badge bg-secondary font-monospace" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    @(string.IsNullOrWhiteSpace(p.LocalSourcePath) ? "تعیین‌نشده" : p.LocalSourcePath)
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-faradid-outline">جزئیات و تاریخچه</a>
+                                    <form asp-action="GenerateReport" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="projectId" value="@p.Id" />
+                                        <button type="submit" class="btn btn-sm btn-faradid">⚡ صدور کارنامه</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

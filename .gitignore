@@ -4,6 +4,7 @@ obj/
 *.user
 *.suo
 publish/
+App_Data/
 *.log
 .DS_Store
 Thumbs.db

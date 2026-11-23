@@ -1,0 +1,75 @@
+@model ProjectProfile
+@{
+    ViewData["Title"] = "ثبت و تعریف پروژه دیده‌بانی جدید";
+}
+
+<div class="container py-4" style="max-width: 850px;">
+    <div class="card-faradid p-4 p-md-5">
+        <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-secondary pb-3">
+            <div class="fs-2">🌐</div>
+            <div>
+                <h3 class="fw-bold mb-1">تعریف پروژه جدید در سامانه فَرادید</h3>
+                <p class="text-secondary small mb-0">اطلاعات دامنه، مسیر سورس‌کد محلی جهت بازرسی فنی، و مقصد گزارشات را تنظیم فرمایید.</p>
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="Name" class="form-label fw-bold">نام پروژه / برند <span class="text-danger">*</span></label>
+                    <input asp-for="Name" class="form-control bg-dark text-light border-secondary" placeholder="مثال: راهکار الکترونیک سهند" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Domain" class="form-label fw-bold">دامنه وب‌سایت <span class="text-danger">*</span></label>
+                    <input asp-for="Domain" class="form-control bg-dark text-light border-secondary" placeholder="مثال: irres.ir" required />
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label asp-for="ClientName" class="form-label fw-bold">کارفرما یا مدیرمسئول</label>
+                    <input asp-for="ClientName" class="form-control bg-dark text-light border-secondary" placeholder="مثال: مهندس رنجبر" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Industry" class="form-label fw-bold">حوزه صنعت و فعالیت</label>
+                    <input asp-for="Industry" class="form-control bg-dark text-light border-secondary" placeholder="مثال: نرم‌افزار سازمانی و هوشمندسازی" />
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="LocalSourcePath" class="form-label fw-bold">
+                    مسیر فیزیکی سورس‌کد پروژه روی دیسک (اختیاری)
+                </label>
+                <input asp-for="LocalSourcePath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: F:\Projects\Irres.ir" />
+                <div class="form-text text-secondary">
+                    💡 در صورت ورود مسیر محلی، موتور فَرادید فایل‌های <code style="color:#00e5ff;">web.config</code>، ریدایرکت‌های ۳۰۱، کدهای وضعیت HTTP، تگ‌های کانونیکال و اسکیماهای قالب را به صورت خودکار ممیزی می‌کند.
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="TargetReportPath" class="form-label fw-bold">
+                    مسیر ذخیره گزارشات و کارنامه‌های خروجی (اختیاری)
+                </label>
+                <input asp-for="TargetReportPath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: F:\SEO-Reports\irres" />
+                <div class="form-text text-secondary">
+                    📁 کارنامه‌های تفصیلی ۱۴ صفحه‌ای در قالب HTML خودکفا و آماده چاپ در این مسیر ذخیره خواهند شد.
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Notes" class="form-label fw-bold">یادداشت‌های اختصاصی و اهداف استراتژیک</label>
+                <textarea asp-for="Notes" rows="3" class="form-control bg-dark text-light border-secondary" placeholder="اهداف سئو، کلمات کلیدی هدف یا شرایط خاص پروژه را وارد فرمایید..."></textarea>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary">
+                <a asp-action="Index" class="btn btn-faradid-outline">انصراف و بازگشت</a>
+                <button type="submit" class="btn btn-faradid btn-lg px-4">
+                    ذخیره و ایجاد پروژه ✨
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

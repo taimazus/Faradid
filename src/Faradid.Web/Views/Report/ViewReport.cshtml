@@ -1,0 +1,457 @@
+@model FaradidMasterReport
+@{
+    ViewData["Title"] = $"کارنامه دیده‌بانی {Model.Project.Name} ({Model.Project.Domain})";
+    var p = Model.Project;
+    var gsc = Model.CurrentPeriod;
+    var prev = Model.PreviousPeriod;
+    var comp = Model.Comparative;
+    var audit = Model.CodeAudit;
+    var competitors = Model.Competitors;
+    var ai = Model.AiSynthesis;
+}
+
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Header Bar with Persona Switcher -->
+    <div class="card-faradid p-4 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <img src="~/images/brand/faradid-logo.png" alt="فَرادید" style="width: 52px; height: 52px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);" />
+                <div>
+                    <h3 class="fw-bolder mb-1">
+                        کارنامه راهبردی فَرادید | <span style="color: #00e5ff;">@p.Name</span>
+                    </h3>
+                    <div class="text-secondary small">
+                        دامنه: <strong>@p.Domain</strong> | صنعت: @p.Industry | تاریخ صدور: @Model.GeneratedAtUtc.ToLocalTime().ToString("yyyy/MM/dd - HH:mm")
+                    </div>
+                </div>
+            </div>
+
+            <!-- Persona Switcher -->
+            <div class="d-flex align-items-center gap-2">
+                <span class="small text-secondary me-2">دیدگاه کارنامه:</span>
+                <a asp-action="ViewReport" asp-route-id="@Model.ReportId" asp-route-persona="Executive" class="persona-pill @(Model.ActivePersona == PersonaView.Executive ? "active" : "")">
+                    👑 هیئت مدیره (Executive)
+                </a>
+                <a asp-action="ViewReport" asp-route-id="@Model.ReportId" asp-route-persona="Client" class="persona-pill @(Model.ActivePersona == PersonaView.Client ? "active" : "")">
+                    💼 کارفرما (Client)
+                </a>
+                <a asp-action="ViewReport" asp-route-id="@Model.ReportId" asp-route-persona="Specialist" class="persona-pill @(Model.ActivePersona == PersonaView.Specialist ? "active" : "")">
+                    ⚙️ کارشناس فنی (Specialist)
+                </a>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button onclick="window.print()" class="btn btn-faradid d-flex align-items-center gap-2">
+                    <span>🖨️ چاپ / ذخیره PDF</span>
+                </button>
+                <a asp-action="Download" asp-route-id="@Model.ReportId" class="btn btn-faradid-outline d-flex align-items-center gap-2">
+                    <span>📥 فایل HTML</span>
+                </a>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Model.ExportPath))
+        {
+            <div class="mt-3 pt-3 border-top border-secondary d-flex align-items-center justify-content-between small text-secondary">
+                <div>📁 نسخه خودکفا در مسیر دیسک صادر شد: <span class="font-monospace text-warning">@Model.ExportPath</span></div>
+                <div class="badge bg-success">ذخیره‌شده روی سرور</div>
+            </div>
+        }
+    </div>
+
+    <!-- Core KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card-faradid p-4" style="border-right: 4px solid var(--brand-primary);">
+                <div class="text-secondary small mb-1">کلیک‌های خالص ارگانیک (Clicks)</div>
+                <div class="fs-2 fw-bolder text-light">@gsc.TotalClicks.ToString("N0")</div>
+                <div class="small mt-2 @(comp.ClicksDelta.Trend == TrendDirection.Up ? "text-success" : "text-danger")">
+                    تغییر نسبت به دوره قبل: @(comp.ClicksDelta.PercentageDelta >= 0 ? "+" : "")@comp.ClicksDelta.PercentageDelta.ToString("0.0")٪
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-faradid p-4" style="border-right: 4px solid #3b82f6;">
+                <div class="text-secondary small mb-1">دفعات نمایش در سرپ (Impressions)</div>
+                <div class="fs-2 fw-bolder text-light">@gsc.TotalImpressions.ToString("N0")</div>
+                <div class="small mt-2 @(comp.ImpressionsDelta.Trend == TrendDirection.Up ? "text-success" : "text-danger")">
+                    تغییر نسبت به دوره قبل: @(comp.ImpressionsDelta.PercentageDelta >= 0 ? "+" : "")@comp.ImpressionsDelta.PercentageDelta.ToString("0.0")٪
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-faradid p-4" style="border-right: 4px solid #10b981;">
+                <div class="text-secondary small mb-1">نرخ میانگین کلیک (Average CTR)</div>
+                <div class="fs-2 fw-bolder text-light">@((gsc.AverageCtr * 100).ToString("F2"))٪</div>
+                <div class="small mt-2 text-secondary">موقعیت میانگین رتبه: @gsc.AveragePosition.ToString("F1")</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card-faradid p-4" style="border-right: 4px solid #00e5ff;">
+                <div class="text-secondary small mb-1">نمره سلامت فنی کدهای محلی</div>
+                <div class="fs-2 fw-bolder" style="color: @(audit?.TechnicalHealthScore >= 80 ? "#10b981" : "#f59e0b");">
+                    @(audit?.TechnicalHealthScore ?? 85)/100
+                </div>
+                <div class="small mt-2 text-secondary">بررسی فایل‌های Web.config و متادیتا</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anomaly Alert & VPN Traffic Analysis -->
+    @if (comp.HasSignificantAnomaly)
+    {
+        <div class="card-faradid p-4 mb-4" style="background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.4);">
+            <div class="d-flex align-items-center gap-2 mb-2 text-warning fw-bold fs-5">
+                <span>⚠️</span>
+                <span>دیده‌بانی ناهنجاری ترافیک و اثرات اختلال اینترنت بین‌الملل</span>
+            </div>
+            <p class="mb-2 text-light" style="line-height: 1.8;">
+                @comp.AnomalyExecutiveSummary
+            </p>
+            <div class="d-flex flex-wrap gap-4 mt-3 pt-3 border-top border-warning border-opacity-25 small">
+                <div>
+                    <span class="text-secondary">سهم ترافیک آی‌پی آلمان (فیلترشکن‌ها):</span>
+                    <strong class="text-warning ms-1">@comp.GermanyVpnSharePercent٪</strong>
+                </div>
+                <div>
+                    <span class="text-secondary">سهم ترافیک مستقیم داخلی ایران:</span>
+                    <strong class="text-success ms-1">@comp.IranDirectSharePercent٪</strong>
+                </div>
+                <div>
+                    <span class="text-secondary">کلیک‌های از دست‌رفته در روزهای قطعی:</span>
+                    <strong class="text-danger ms-1">@comp.Anomalies.Sum(a => a.EstimatedLostClicks).ToString("N0") کلیک</strong>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card-faradid p-4 h-100">
+                <h5 class="fw-bold mb-3 border-end border-3 border-danger pe-2">روند روزانه کلیک‌ها و ایمپرشن‌های سرچ کنسول</h5>
+                <div style="height: 300px;">
+                    <canvas id="trafficTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card-faradid p-4 h-100">
+                <h5 class="fw-bold mb-3 border-end border-3 border-info pe-2">تفکیک جغرافیایی کاربران (VPN vs Iran)</h5>
+                <div style="height: 300px;">
+                    <canvas id="geoDoughnutChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Strategic Narrative -->
+    <div class="card-faradid p-4 p-md-5 mb-4" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1) 0%, rgba(17, 24, 39, 0.95) 100%); border-color: rgba(147, 51, 234, 0.3);">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="fs-2">🧠</div>
+            <div>
+                <h4 class="fw-bold mb-0 text-light">کالبدشکافی هوشمند فَرادید و نقشه راه استراتژیک</h4>
+                <div class="text-secondary small">تولید اختصاصی متناسب با دیدگاه @Model.ActivePersona</div>
+            </div>
+        </div>
+
+        <div class="p-3 rounded-3 mb-4" style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.05); line-height: 1.9; color: #e9d5ff;">
+            @ai.ExecutiveSummary
+        </div>
+
+        @if (Model.ActivePersona == PersonaView.Specialist || Model.ActivePersona == PersonaView.Executive)
+        {
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-info mb-2">تحلیل عمیق رفتار کلمات کلیدی و سرپ:</h6>
+                    <div class="small text-secondary" style="line-height: 1.8; white-space: pre-line;">
+                        @ai.DeepDiveAnalysis
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="fw-bold text-warning mb-2">نقشه راه تاکتیکی ۳ ماهه آینده:</h6>
+                    <div class="small text-secondary" style="line-height: 1.8; white-space: pre-line;">
+                        @ai.TacticalRoadmap
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- 6-Axis Competitor Autopsy -->
+    <div class="card-faradid p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-1 border-end border-4 border-danger pe-3">ماتریس ۶ محوره کالبدشکافی رقبا و تحلیل شکاف بازار</h4>
+                <p class="text-secondary small mb-0">@competitors.MarketPositionSummary</p>
+            </div>
+            <div class="text-end">
+                <div class="small text-secondary">امتیاز ترکیبی ما: <strong class="text-danger fs-5">@competitors.OurCompositeScore</strong> / ۱۰۰</div>
+                <div class="small text-secondary">امتیاز لیدر بازار: <strong class="text-info fs-5">@competitors.LeaderCompositeScore</strong> / ۱۰۰</div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+                <thead>
+                    <tr class="text-secondary small border-bottom border-secondary">
+                        <th>محور ارزیابی استراتژیک</th>
+                        <th class="text-center">امتیاز @p.Domain</th>
+                        @foreach (var c in competitors.Competitors.Take(2))
+                        {
+                            <th class="text-center">امتیاز @c.Name</th>
+                        }
+                        <th>تحلیل شکاف رقابتی (Gap Analysis)</th>
+                        <th>اقدام تاکتیکی پاتک به رقیب</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var axis in competitors.ComparisonAxes)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-bold text-light">@axis.AxisName</div>
+                                <div class="small text-muted" style="max-width: 250px;">@axis.Description</div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-danger fs-6">@axis.OurScore</span>
+                            </td>
+                            @foreach (var c in competitors.Competitors.Take(2))
+                            {
+                                var cScore = axis.CompetitorScores.TryGetValue(c.Name, out var sc) ? sc : 70;
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">@cScore</span>
+                                </td>
+                            }
+                            <td class="small text-secondary">@axis.GapAnalysis</td>
+                            <td class="small fw-semibold" style="color: #00e5ff;">@axis.TacticalCounterAction</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Offensive Counter Playbook -->
+        <div class="mt-4 pt-3 border-top border-secondary">
+            <h6 class="fw-bold text-light mb-3">🛡️ تاکتیک‌های پاتک فوری فَرادید جهت تسخیر بازار رقبا:</h6>
+            <div class="row g-2">
+                @foreach (var action in competitors.OffensiveCounterPlaybook)
+                {
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border); font-size: 13px;">
+                            <span class="text-danger me-2">⚡</span> @action
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Codebase Audit Section (shown in full for Specialist & Executive) -->
+    @if (audit != null && audit.Items.Count > 0)
+    {
+        <div class="card-faradid p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="fw-bold mb-1 border-end border-4 border-info pe-3">ممیزی ساختار کدهای محلی و زیرساخت میزبانی وب</h4>
+                    <p class="text-secondary small mb-0">بازرسی خودکار فایل‌های پیکربندی وب، ریدایرکت‌های ۳۰۱، کدهای وضعیت سرور و استانداردهای اسکیما</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge @(audit.TechnicalHealthScore >= 80 ? "bg-success" : "bg-warning") fs-6 px-3 py-2">
+                        نمره فنی: @audit.TechnicalHealthScore از ۱۰۰
+                    </span>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+                    <thead>
+                        <tr class="text-secondary small border-bottom border-secondary">
+                            <th>دسته‌بندی</th>
+                            <th>قانون مورد بررسی</th>
+                            <th>اهمیت</th>
+                            <th>نتیجه ارزیابی</th>
+                            <th>توضیحات و پیشنهاد اصلاح</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in audit.Items)
+                        {
+                            <tr>
+                                <td><span class="badge bg-dark border border-secondary">@item.Category</span></td>
+                                <td class="fw-semibold text-light">@item.RuleName</td>
+                                <td><span class="badge bg-secondary small">@item.Severity</span></td>
+                                <td>
+                                    @if (item.Passed)
+                                    {
+                                        <span class="text-success fw-bold">✓ تأیید و انطباق کامل</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger fw-bold">✗ نیازمند اصلاح</span>
+                                    }
+                                </td>
+                                <td class="small">
+                                    <div class="text-secondary">@item.Description</div>
+                                    <div class="text-warning mt-1">💡 اقدام پیشنهادی: @item.Recommendation</div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- 4-Article AI Editorial Calendar -->
+    <div class="card-faradid p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="fw-bold mb-1 border-end border-4 border-warning pe-3">تقویم سردبیری و مقالات استراتژیک پیشنهادی هوش مصنوعی</h4>
+                <p class="text-secondary small mb-0">۴ مقاله ماهانه با تمرکز بر کلمات کلیدی دم‌دراز و نیت جستجوی خریدار جهت تسخیر صدر نتایج</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            @foreach (var article in ai.EditorialCalendar)
+            {
+                <div class="col-md-6">
+                    <div class="card-faradid p-4 h-100" style="background: rgba(255, 255, 255, 0.02);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-danger rounded-circle p-2" style="width: 32px; height: 32px; line-height: 16px;">@article.Order</span>
+                            <span class="badge bg-info text-dark fw-bold">اولویت: @article.PriorityScore/100</span>
+                        </div>
+                        <h6 class="fw-bold text-light mb-2" style="line-height: 1.6;">@article.Title</h6>
+                        <div class="badge bg-secondary mb-3">کلمه کلیدی کانونی: @article.TargetKeyword</div>
+                        
+                        <div class="small text-secondary mb-2"><strong>نیت جستجو:</strong> @article.UserSearchIntent</div>
+                        <div class="small text-secondary mb-2"><strong>حجم هدف:</strong> @article.TargetWordCount.ToString("N0") کلمه جامع</div>
+                        <div class="small text-light mb-3"><strong>دلیل استراتژیک:</strong> @article.StrategicReasoning</div>
+
+                        <div class="pt-2 border-top border-secondary">
+                            <div class="small fw-bold text-secondary mb-1">سرفصل‌های کلیدی مقاله (Pillars):</div>
+                            <ul class="list-unstyled small mb-0 text-secondary">
+                                @foreach (var pillar in article.ContentPillars)
+                                {
+                                    <li>• @pillar</li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Top Queries Table -->
+    @if (gsc.TopQueries.Count > 0)
+    {
+        <div class="card-faradid p-4 mb-4">
+            <h5 class="fw-bold mb-3 border-end border-3 border-danger pe-2">کلمات کلیدی برتر ارگانیک در سرچ کنسول (Top Queries)</h5>
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0" style="--bs-table-bg: transparent;">
+                    <thead>
+                        <tr class="text-secondary small border-bottom border-secondary">
+                            <th>عبارت جستجوشده (Query)</th>
+                            <th class="text-center">کلیک‌ها</th>
+                            <th class="text-center">دفعات نمایش (Imp)</th>
+                            <th class="text-center">نرخ کلیک (CTR)</th>
+                            <th class="text-center">موقعیت رتبه میانگین</th>
+                            <th class="text-center">سهم کلیک</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var q in gsc.TopQueries.Take(10))
+                        {
+                            <tr>
+                                <td class="fw-semibold text-light">@q.Key</td>
+                                <td class="text-center fw-bold" style="color: #00e5ff;">@q.Clicks.ToString("N0")</td>
+                                <td class="text-center text-secondary">@q.Impressions.ToString("N0")</td>
+                                <td class="text-center">@((q.Ctr * 100).ToString("F1"))٪</td>
+                                <td class="text-center">
+                                    <span class="badge @(q.Position <= 3 ? "bg-success" : (q.Position <= 10 ? "bg-primary" : "bg-secondary"))">
+                                        @q.Position.ToString("F1")
+                                    </span>
+                                </td>
+                                <td class="text-center text-secondary">@q.SharePercentage.ToString("F1")٪</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Traffic Trendline Chart
+        const dailyLabels = [@Html.Raw(string.Join(",", gsc.DailyMetrics.GroupBy(d => d.Date.ToString("MM/dd")).Select(g => $"'{g.Key}'")))];
+        const dailyClicks = [@Html.Raw(string.Join(",", gsc.DailyMetrics.GroupBy(d => d.Date.ToString("MM/dd")).Select(g => g.Sum(x => x.Clicks))))];
+        const dailyImp = [@Html.Raw(string.Join(",", gsc.DailyMetrics.GroupBy(d => d.Date.ToString("MM/dd")).Select(g => g.Sum(x => x.Impressions))))];
+
+        const ctxTrend = document.getElementById('trafficTrendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: dailyLabels,
+                datasets: [
+                    {
+                        label: 'کلیک‌های ارگانیک',
+                        data: dailyClicks,
+                        borderColor: '#00e5ff',
+                        backgroundColor: 'rgba(0, 229, 255, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'ایمپرشن (نمایش)',
+                        data: dailyImp,
+                        borderColor: '#9e1b32',
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5],
+                        tension: 0.3,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+                    y: { position: 'right', grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#00e5ff' } },
+                    y1: { position: 'left', grid: { drawOnChartArea: false }, ticks: { color: '#9e1b32' } }
+                },
+                plugins: {
+                    legend: { labels: { color: '#f3f4f6', font: { family: 'Vazirmatn' } } }
+                }
+            }
+        });
+
+        // Geo Doughnut Chart
+        const geoLabels = [@Html.Raw(string.Join(",", gsc.CountryBreakdown.Take(5).Select(c => $"'{c.Label}'")))];
+        const geoData = [@Html.Raw(string.Join(",", gsc.CountryBreakdown.Take(5).Select(c => c.Clicks)))];
+
+        const ctxGeo = document.getElementById('geoDoughnutChart').getContext('2d');
+        new Chart(ctxGeo, {
+            type: 'doughnut',
+            data: {
+                labels: geoLabels,
+                datasets: [{
+                    data: geoData,
+                    backgroundColor: ['#9e1b32', '#00e5ff', '#3b82f6', '#10b981', '#f59e0b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#f3f4f6', font: { family: 'Vazirmatn' } } }
+                }
+            }
+        });
+    </script>
+}

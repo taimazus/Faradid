@@ -1,7 +1,49 @@
+using Faradid.AI;
+using Faradid.Core.Interfaces;
+using Faradid.Engine;
+using Faradid.Web.Authentication;
+using Faradid.Web.Repositories;
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add Controllers and Razor Views
 builder.Services.AddControllersWithViews();
+
+// Session Support (for SSO state and navigation context)
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(60);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
+// Authentication via Cookies (Irres Gate SSO)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.Name = "Faradid.Auth";
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+        options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
+    });
+
+// Central SSO Configuration
+var centralAuthConfig = builder.Configuration.GetSection("CentralAuth").Get<CentralAuthConfig>() ?? new CentralAuthConfig();
+builder.Services.AddSingleton(centralAuthConfig);
+builder.Services.AddHttpClient<ICentralAuthClient, CentralAuthClient>();
+
+// Domain & Engine Services
+builder.Services.AddSingleton<IProjectRepository, JsonFileProjectRepository>();
+builder.Services.AddScoped<ILocalSourceAuditor, LocalSourceAuditor>();
+builder.Services.AddScoped<IGscDataParser, GscDataParser>();
+builder.Services.AddScoped<IComparativeAnalyticsEngine, ComparativeAnalyticsEngine>();
+builder.Services.AddScoped<ICompetitorBenchmarkingEngine, CompetitorBenchmarkingEngine>();
+builder.Services.AddScoped<IAiCopilotService, FaradidAiCopilot>();
+builder.Services.AddScoped<IReportExporter, HtmlReportExporter>();
 
 var app = builder.Build();
 
@@ -9,21 +51,20 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 app.UseRouting();
 
+app.UseSession();
+app.UseAuthentication();
 app.UseAuthorization();
-
-app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
-
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

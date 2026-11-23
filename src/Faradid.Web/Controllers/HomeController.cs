@@ -1,24 +1,29 @@
-using System.Diagnostics;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Faradid.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Faradid.Web.Models;
 
 namespace Faradid.Web.Controllers;
 
-public class HomeController : Controller
+public sealed class HomeController : Controller
 {
-    public IActionResult Index()
+    private readonly IProjectRepository _repo;
+
+    public HomeController(IProjectRepository repo)
     {
-        return View();
+        _repo = repo;
     }
 
-    public IActionResult Privacy()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        var projects = await _repo.GetAllProjectsAsync();
+        ViewBag.TotalProjects = projects.Count;
+        return View(projects);
     }
 
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
+    public IActionResult About()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        return View();
     }
 }

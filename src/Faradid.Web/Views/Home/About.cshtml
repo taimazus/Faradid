@@ -1,0 +1,53 @@
+@{
+    ViewData["Title"] = "درباره سامانه دیده‌بانی فَرادید";
+}
+
+<div class="container py-5" style="max-width: 900px;">
+    <div class="card-faradid p-4 p-md-5 mb-4">
+        <div class="d-flex align-items-center gap-4 mb-4 border-bottom border-secondary pb-4">
+            <img src="~/images/brand/faradid-logo.png" alt="فَرادید" style="width: 80px; height: 80px; border-radius: 20px; box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);" />
+            <div>
+                <h2 class="fw-bold mb-1">فَرادید (Faradid)</h2>
+                <div class="text-secondary">سامانه هوشمند تحلیل داده، دیده‌بانی سئو و صدور کارنامه سازمانی</div>
+                <div class="badge bg-primary mt-2">نسخه ۱.۰.۰ بر بستر ASP.NET Core 10</div>
+            </div>
+        </div>
+
+        <h4 class="fw-bold mb-3 border-end border-4 border-danger pe-3">فلسفه و چیستی فَرادید</h4>
+        <p class="text-light" style="line-height: 2;">
+            واژه «فَرادید» در زبان اصیل فارسی به معنای دیدِ ژرف، دورنگری، اشراف محیطی و دیده‌بانی فراتر از افق معمولی است. این سامانه با هدف رهایی از گزارش‌های خام و ربات‌گونه ابزارهای رایج سئو متولد شده است؛ گزارش‌هایی که برای انسان‌ها، مدیران تصمیم‌گیر، و کارشناسان اهل عمل طراحی شده‌اند، نه صرفاً برای آرشیو شدن.
+        </p>
+
+        <h4 class="fw-bold mt-4 mb-3 border-end border-4 border-info pe-3">ارکان پنج‌گانه متمایز فَرادید</h4>
+        <div class="row g-3 text-secondary">
+            <div class="col-md-6">
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
+                    <strong class="text-light d-block mb-1">۱. دیده‌بانی ناهنجاری‌های شبکه ایران (VPN Anomaly):</strong>
+                    تفکیک دقیق ترافیک پروکسی‌های اروپایی (آلمان) از ترافیک مستقیم داخلی جهت تحلیل واقع‌بینانه اثرات قطعی‌ها.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
+                    <strong class="text-light d-block mb-1">۲. ممیزی خودکار کدهای محلی (Local Code Auditor):</strong>
+                    پیمایش فایل‌های Web.config، ریدایرکت‌های ۳۰۱، کدهای وضعیت سرور و استانداردهای اسکیما بدون نیاز به دسترسی به پنل هاست.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
+                    <strong class="text-light d-block mb-1">۳. ماتریس ۶ محوره کالبدشکافی رقبا:</strong>
+                    تحلیل شکاف بازار و تدوین ۴ استراتژی پاتک متقابل جهت تصاحب سهم صدای بازار.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-3 rounded-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
+                    <strong class="text-light d-block mb-1">۴. سوئیچر سه‌گانه دیدگاه (Persona Switcher):</strong>
+                    نمایش سفارشی‌سازی‌شده برای هیئت مدیره، کارفرما، و کارشناس ارشد سئو.
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-top border-secondary text-center">
+            <a asp-controller="Project" asp-action="Index" class="btn btn-faradid px-4">مشاهده پروژه‌های تحت مانیتورینگ</a>
+        </div>
+    </div>
+</div>

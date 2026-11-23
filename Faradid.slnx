@@ -5,4 +5,7 @@
     <Project Path="src/Faradid.Engine/Faradid.Engine.csproj" />
     <Project Path="src/Faradid.Web/Faradid.Web.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Faradid.Tests/Faradid.Tests.csproj" />
+  </Folder>
 </Solution>
