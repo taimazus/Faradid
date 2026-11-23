@@ -18,6 +18,15 @@ public sealed class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        // Intercept incoming SSO authorization codes redirected to site root
+        if (Request.Query.ContainsKey("code"))
+        {
+            var code = Request.Query["code"].ToString();
+            var state = Request.Query["state"].ToString();
+            var error = Request.Query["error"].ToString();
+            return RedirectToAction("SsoCallback", "Account", new { code, state, error });
+        }
+
         if (User.Identity?.IsAuthenticated != true)
         {
             return RedirectToAction("Login", "Account");

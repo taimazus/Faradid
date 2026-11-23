@@ -34,6 +34,13 @@ public sealed class AccountController : Controller
         return View();
     }
 
+    [HttpGet]
+    [Route("sso/login")]
+    public IActionResult SsoLogin(string? returnUrl = null)
+    {
+        return SsoRedirect(returnUrl);
+    }
+
     [HttpPost]
     public IActionResult SsoRedirect(string? returnUrl = null)
     {
@@ -43,6 +50,9 @@ public sealed class AccountController : Controller
         {
             HttpContext.Session.SetString("SSO_RETURN_URL", returnUrl);
         }
+
+        var config = _centralAuth.GetConfig();
+        HttpContext.Session.SetString("SSO_REDIRECT_URI", config.RedirectUri);
 
         var redirectUrl = _centralAuth.BuildAuthorizeUrl(state, returnUrl);
         return Redirect(redirectUrl);
@@ -64,7 +74,8 @@ public sealed class AccountController : Controller
             return RedirectToAction(nameof(Login));
         }
 
-        var exchange = await _centralAuth.ExchangeSsoCodeAsync(code);
+        var savedRedirectUri = HttpContext.Session.GetString("SSO_REDIRECT_URI");
+        var exchange = await _centralAuth.ExchangeSsoCodeAsync(code, savedRedirectUri);
         if (!exchange.IsSuccess || exchange.Value == null)
         {
             TempData["ErrorMessage"] = exchange.ErrorMessage ?? "تبادل اطلاعات با سرور هویت متمرکز با شکست مواجه شد.";
