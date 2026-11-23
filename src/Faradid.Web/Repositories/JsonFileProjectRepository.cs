@@ -6,8 +6,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Faradid.AI;
+using Faradid.Core.Enums;
 using Faradid.Core.Interfaces;
 using Faradid.Core.Models;
+using Faradid.Engine;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -44,13 +47,98 @@ public sealed class JsonFileProjectRepository : IProjectRepository
         }
 
         InitializeSeedProjects();
+        InitializeSeedReports();
     }
 
     private void InitializeSeedProjects()
     {
         if (File.Exists(_projectsFilePath)) return;
 
-        var seedProjects = new List<ProjectProfile>
+        var seedProjects = GetInitialProjectList();
+
+        try
+        {
+            var json = JsonSerializer.Serialize(seedProjects, JsonOptions);
+            File.WriteAllText(_projectsFilePath, json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize seed projects in {Path}", _projectsFilePath);
+        }
+    }
+
+    private void InitializeSeedReports()
+    {
+        try
+        {
+            var existingFiles = Directory.GetFiles(_reportsDirectory, "*.json");
+            if (existingFiles.Length > 0) return;
+
+            var projects = GetInitialProjectList();
+            var gscParser = new GscDataParser();
+            var compEngine = new ComparativeAnalyticsEngine();
+            var compBench = new CompetitorBenchmarkingEngine();
+            var copilot = new FaradidAiCopilot();
+
+            foreach (var proj in projects)
+            {
+                var currentGsc = gscParser.CreatePresetData(proj.Domain, "دوره ۲۸ روزه اخیر", 28);
+                var prevGsc = gscParser.CreatePresetData(proj.Domain, "دوره مشابه پیشین", 28);
+                var comparative = compEngine.ComputeComparison(currentGsc, prevGsc);
+                var competitors = compBench.Benchmark(proj, currentGsc, Array.Empty<CompetitorProfile>());
+                
+                // Pre-generate standard code audit items
+                var audit = new CodebaseAuditResult
+                {
+                    ProjectId = proj.Id,
+                    AnalyzedPath = proj.LocalSourcePath ?? string.Empty,
+                    TotalRulesEvaluated = 7,
+                    PassedChecksCount = 6,
+                    IssuesCount = 1,
+                    CriticalIssuesCount = 0,
+                    TechnicalHealthScore = 92,
+                    Items = new List<CodebaseAuditItem>
+                    {
+                        new() { Category = "IIS / Web.config", RuleName = "پیکربندی خطاهای سفارشی HTTP (Custom Errors)", Severity = AuditSeverity.High, Passed = true, Description = "تنظیمات اختصاصی صفحات ۴۰۴ و ۵۰۰ رعایت شده است.", Recommendation = "تداوم مانیتورینگ لاگ‌های IIS." },
+                        new() { Category = "امنیت و ریدایرکت", RuleName = "ریدایرکت ۳۰۱ اجباری به HTTPS", Severity = AuditSeverity.High, Passed = true, Description = "قانون URL Rewrite با کد ۳۰۱ فعال است.", Recommendation = "اطمینان از فعال بودن HSTS." },
+                        new() { Category = "بهینه‌سازی موبایل", RuleName = "تگ متای Viewport در لایوت", Severity = AuditSeverity.Critical, Passed = true, Description = "واکنش‌گرایی در کلیه دستگاه‌ها برقرار است.", Recommendation = "حفظ ساختار ریسپانسیو." },
+                        new() { Category = "تگ‌های کانونیکال", RuleName = "لینک کانونیکال یکتا", Severity = AuditSeverity.High, Passed = true, Description = "تگ کانونیکال جهت جلوگیری از محتوای تکراری تزریق شده است.", Recommendation = "بررسی پارامترهای فیلتر در URL." },
+                        new() { Category = "اسکیما و میکرودیتا", RuleName = "اسکیمای JSON-LD سازمانی", Severity = AuditSeverity.Medium, Passed = true, Description = "اسکریپت‌های سازمان و وب‌سایت در هدر مستقر هستند.", Recommendation = "افزودن اسکیمای FAQ به صفحات خدمات." },
+                        new() { Category = "خزنده‌ها و ربات‌ها", RuleName = "فایل robots.txt و نقشه سایت", Severity = AuditSeverity.Medium, Passed = true, Description = "دستور Sitemap در انتهای robots.txt ثبت شده است.", Recommendation = "به‌روزرسانی پویای نقشه سایت." },
+                        new() { Category = "کش مرورگر", RuleName = "تنظیم هدر Cache-Control فایل‌های استاتیک", Severity = AuditSeverity.Low, Passed = false, Description = "کش ۳۰ روزه برای برخی از وب‌فونت‌ها صراحتاً در هدر تعیین نشده است.", Recommendation = "افزودن تگ clientCache در web.config." }
+                    }
+                };
+
+                var aiReport = copilot.GenerateInsightsAsync(proj, currentGsc, comparative, competitors, audit).GetAwaiter().GetResult();
+
+                var masterReport = new FaradidMasterReport
+                {
+                    ReportId = Guid.NewGuid(),
+                    Project = proj,
+                    ActivePersona = PersonaView.Executive,
+                    GeneratedAtUtc = DateTime.UtcNow.AddHours(-1),
+                    CurrentPeriod = currentGsc,
+                    PreviousPeriod = prevGsc,
+                    Comparative = comparative,
+                    CodeAudit = audit,
+                    Competitors = competitors,
+                    AiSynthesis = aiReport,
+                    ExportPath = Path.Combine(proj.TargetReportPath ?? "App_Data/exports", $"Faradid-Report-{proj.Domain}.html")
+                };
+
+                var reportFile = Path.Combine(_reportsDirectory, $"{masterReport.ReportId}.json");
+                File.WriteAllText(reportFile, JsonSerializer.Serialize(masterReport, JsonOptions));
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize seed reports in {Path}", _reportsDirectory);
+        }
+    }
+
+    private static List<ProjectProfile> GetInitialProjectList()
+    {
+        return new List<ProjectProfile>
         {
             new()
             {
@@ -118,16 +206,6 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                 UpdatedAtUtc = DateTime.UtcNow
             }
         };
-
-        try
-        {
-            var json = JsonSerializer.Serialize(seedProjects, JsonOptions);
-            File.WriteAllText(_projectsFilePath, json);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to initialize seed projects in {Path}", _projectsFilePath);
-        }
     }
 
     public async Task<IReadOnlyList<ProjectProfile>> GetAllProjectsAsync(CancellationToken ct = default)

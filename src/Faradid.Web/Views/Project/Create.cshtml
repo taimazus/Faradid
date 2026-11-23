@@ -1,75 +1,249 @@
 @model ProjectProfile
 @{
-    ViewData["Title"] = "ثبت و تعریف پروژه دیده‌بانی جدید";
+    ViewData["Title"] = "ویزارد ۵ مرحله‌ای ثبت و دیده‌بانی پروژه جدید";
 }
 
-<div class="container py-4" style="max-width: 850px;">
+<div class="container py-4" style="max-width: 950px;">
     <div class="card-faradid p-4 p-md-5">
+        <!-- Header -->
         <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-secondary pb-3">
-            <div class="fs-2">🌐</div>
+            <img src="~/images/brand/faradid-logo.png" alt="فَرادید" style="width: 48px; height: 48px; border-radius: 12px; box-shadow: 0 0 15px rgba(0, 229, 255, 0.4);" />
             <div>
-                <h3 class="fw-bold mb-1">تعریف پروژه جدید در سامانه فَرادید</h3>
-                <p class="text-secondary small mb-0">اطلاعات دامنه، مسیر سورس‌کد محلی جهت بازرسی فنی، و مقصد گزارشات را تنظیم فرمایید.</p>
+                <h3 class="fw-bold mb-1 text-light">ویزارد ۵ مرحله‌ای راه‌اندازی دیده‌بانی فَرادید</h3>
+                <p class="text-secondary small mb-0">پیکربندی هویت سایت، ممیزی کدهای محلی، منبع سرچ‌کنسول و تحلیل رقبا در ۵ گام</p>
             </div>
         </div>
 
-        <form asp-action="Create" method="post">
+        <!-- Wizard Step Indicators -->
+        <div class="d-flex justify-content-between mb-4 position-relative">
+            <div class="text-center flex-fill wizard-step-indicator active" id="stepIndicator1" onclick="goToStep(1)">
+                <div class="wizard-circle">۱</div>
+                <div class="small mt-1 text-light">هویت دامنه</div>
+            </div>
+            <div class="text-center flex-fill wizard-step-indicator" id="stepIndicator2" onclick="goToStep(2)">
+                <div class="wizard-circle">۲</div>
+                <div class="small mt-1 text-secondary">کدهای محلی</div>
+            </div>
+            <div class="text-center flex-fill wizard-step-indicator" id="stepIndicator3" onclick="goToStep(3)">
+                <div class="wizard-circle">۳</div>
+                <div class="small mt-1 text-secondary">سرچ کنسول</div>
+            </div>
+            <div class="text-center flex-fill wizard-step-indicator" id="stepIndicator4" onclick="goToStep(4)">
+                <div class="wizard-circle">۴</div>
+                <div class="small mt-1 text-secondary">تحلیل رقبا</div>
+            </div>
+            <div class="text-center flex-fill wizard-step-indicator" id="stepIndicator5" onclick="goToStep(5)">
+                <div class="wizard-circle">۵</div>
+                <div class="small mt-1 text-secondary">خروجی و صدور</div>
+            </div>
+        </div>
+
+        <form asp-action="Create" method="post" id="wizardForm">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label asp-for="Name" class="form-label fw-bold">نام پروژه / برند <span class="text-danger">*</span></label>
-                    <input asp-for="Name" class="form-control bg-dark text-light border-secondary" placeholder="مثال: راهکار الکترونیک سهند" required />
+            <!-- STEP 1: Domain & Identity -->
+            <div class="wizard-step" id="stepContent1">
+                <h5 class="fw-bold text-light mb-3 border-end border-3 border-danger pe-2">گام ۱: مشخصات هویتی و زمینه فعالیت سایت</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="Name" class="form-label fw-bold small text-light">نام برند یا سازمان <span class="text-danger">*</span></label>
+                        <input asp-for="Name" class="form-control bg-dark text-light border-secondary" placeholder="مثال: راهکار الکترونیک سهند" required id="projNameInput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Domain" class="form-label fw-bold small text-light">دامنه وب‌سایت <span class="text-danger">*</span></label>
+                        <input asp-for="Domain" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: irres.ir" required id="projDomainInput" />
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <label asp-for="Domain" class="form-label fw-bold">دامنه وب‌سایت <span class="text-danger">*</span></label>
-                    <input asp-for="Domain" class="form-control bg-dark text-light border-secondary" placeholder="مثال: irres.ir" required />
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label asp-for="ClientName" class="form-label fw-bold small text-light">نام کارفرما یا مدیرمسئول</label>
+                        <input asp-for="ClientName" class="form-control bg-dark text-light border-secondary" placeholder="مثال: مهندس رنجبر" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Industry" class="form-label fw-bold small text-light">حوزه صنعت و تخصص</label>
+                        <input asp-for="Industry" class="form-control bg-dark text-light border-secondary" placeholder="مثال: توسعه نرم‌افزار و هوشمندسازی" />
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end mt-4">
+                    <button type="button" class="btn btn-faradid px-4" onclick="validateStep1()">ادامه به گام ۲ (کدهای محلی) ←</button>
                 </div>
             </div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <label asp-for="ClientName" class="form-label fw-bold">کارفرما یا مدیرمسئول</label>
-                    <input asp-for="ClientName" class="form-control bg-dark text-light border-secondary" placeholder="مثال: مهندس رنجبر" />
-                </div>
-                <div class="col-md-6">
-                    <label asp-for="Industry" class="form-label fw-bold">حوزه صنعت و فعالیت</label>
-                    <input asp-for="Industry" class="form-control bg-dark text-light border-secondary" placeholder="مثال: نرم‌افزار سازمانی و هوشمندسازی" />
-                </div>
-            </div>
+            <!-- STEP 2: Local Codebase Audit -->
+            <div class="wizard-step d-none" id="stepContent2">
+                <h5 class="fw-bold text-light mb-3 border-end border-3 border-info pe-2">گام ۲: ممیزی خودکار کدهای محلی و وب‌کانفیگ</h5>
+                <p class="text-secondary small mb-3">
+                    در صورتی که سورس‌کد پروژه روی دیسک محلی یا سرور قرار دارد، مسیر دایرکتوری آن را وارد فرمایید تا فایل‌های <code style="color:#00e5ff;">Web.config</code>، ریدایرکت‌های ۳۰۱، کدهای خطا، تگ‌های کانونیکال و اسکیما بازرسی شوند.
+                </p>
 
-            <div class="mb-4">
-                <label asp-for="LocalSourcePath" class="form-label fw-bold">
-                    مسیر فیزیکی سورس‌کد پروژه روی دیسک (اختیاری)
-                </label>
-                <input asp-for="LocalSourcePath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: F:\Projects\Irres.ir" />
-                <div class="form-text text-secondary">
-                    💡 در صورت ورود مسیر محلی، موتور فَرادید فایل‌های <code style="color:#00e5ff;">web.config</code>، ریدایرکت‌های ۳۰۱، کدهای وضعیت HTTP، تگ‌های کانونیکال و اسکیماهای قالب را به صورت خودکار ممیزی می‌کند.
+                <div class="mb-4">
+                    <label asp-for="LocalSourcePath" class="form-label fw-bold small text-light">مسیر محلی دایرکتوری پروژه (اختیاری)</label>
+                    <input asp-for="LocalSourcePath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: F:\Projects\Irres.ir" id="localPathInput" />
+                    <div class="form-text text-secondary mt-2">
+                        💡 اگر مسیر محلی خالی بماند، ممیزی کدهای محلی روی نمره تخمینی استاندارد قرار خواهد گرفت.
+                    </div>
                 </div>
-            </div>
 
-            <div class="mb-4">
-                <label asp-for="TargetReportPath" class="form-label fw-bold">
-                    مسیر ذخیره گزارشات و کارنامه‌های خروجی (اختیاری)
-                </label>
-                <input asp-for="TargetReportPath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: F:\SEO-Reports\irres" />
-                <div class="form-text text-secondary">
-                    📁 کارنامه‌های تفصیلی ۱۴ صفحه‌ای در قالب HTML خودکفا و آماده چاپ در این مسیر ذخیره خواهند شد.
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-faradid-outline px-4" onclick="goToStep(1)">→ بازگشت به گام ۱</button>
+                    <button type="button" class="btn btn-faradid px-4" onclick="goToStep(3)">ادامه به گام ۳ (سرچ کنسول) ←</button>
                 </div>
             </div>
 
-            <div class="mb-4">
-                <label asp-for="Notes" class="form-label fw-bold">یادداشت‌های اختصاصی و اهداف استراتژیک</label>
-                <textarea asp-for="Notes" rows="3" class="form-control bg-dark text-light border-secondary" placeholder="اهداف سئو، کلمات کلیدی هدف یا شرایط خاص پروژه را وارد فرمایید..."></textarea>
+            <!-- STEP 3: Google Search Console Ingestion -->
+            <div class="wizard-step d-none" id="stepContent3">
+                <h5 class="fw-bold text-light mb-3 border-end border-3 border-warning pe-2">گام ۳: پیکربندی جریان داده‌های سرچ کنسول (GSC)</h5>
+                <p class="text-secondary small mb-3">
+                    نحوه دریافت داده‌های سرچ کنسول گوگل را برای تحلیل ناهنجاری، افت اختلال اینترنت و ترافیک آلمان انتخاب نمایید:
+                </p>
+
+                <div class="p-3 rounded-3 mb-4" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--brand-border);">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="gscSourceType" id="gscPresetRadio" value="preset" checked onchange="toggleGscUpload(false)">
+                        <label class="form-check-label text-light fw-bold" for="gscPresetRadio">
+                            ⚡ استفاده از پایگاه داده هوشمند و تحلیلی فَرادید (توصیه‌شده برای استقرار فوری)
+                        </label>
+                        <div class="small text-secondary mt-1">تولید داده‌های دوره‌ای ۲۸ روزه با احتساب افت ترافیک در شرایط اختلال اینترنت و سهم ۴۸٪ پروکسی آلمان.</div>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="gscSourceType" id="gscUploadRadio" value="upload" onchange="toggleGscUpload(true)">
+                        <label class="form-check-label text-light fw-bold" for="gscUploadRadio">
+                            📁 ورود محتوای CSV خروجی مستقیم گوگل سرچ کنسول
+                        </label>
+                        <div class="small text-secondary mt-1">آپلود داده‌های خام عملکرد (Queries, Clicks, Impressions, CTR, Position).</div>
+                    </div>
+                </div>
+
+                <div class="mb-4 d-none" id="gscUploadArea">
+                    <label class="form-label fw-bold small text-light">متن فایل CSV خروجی سرچ کنسول:</label>
+                    <textarea name="gscCsvContent" rows="4" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="Query,Clicks,Impressions,CTR,Position..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-faradid-outline px-4" onclick="goToStep(2)">→ بازگشت به گام ۲</button>
+                    <button type="button" class="btn btn-faradid px-4" onclick="goToStep(4)">ادامه به گام ۴ (رقبا) ←</button>
+                </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center pt-3 border-top border-secondary">
-                <a asp-action="Index" class="btn btn-faradid-outline">انصراف و بازگشت</a>
-                <button type="submit" class="btn btn-faradid btn-lg px-4">
-                    ذخیره و ایجاد پروژه ✨
-                </button>
+            <!-- STEP 4: Competitor Intelligence -->
+            <div class="wizard-step d-none" id="stepContent4">
+                <h5 class="fw-bold text-light mb-3 border-end border-3 border-danger pe-2">گام ۴: دیده‌بانی و کالبدشکافی رقبای مستقیم بازار</h5>
+                <p class="text-secondary small mb-3">
+                    موتور فَرادید سایت شما را در ۶ محور حیاتی با رقبای اصلی مقایسه می‌کند. در صورت عدم ثبت دستی، رقبای پیش‌فرض صنعت به طور خودکار شناسایی خواهند شد.
+                </p>
+
+                <div class="mb-4">
+                    <label asp-for="Notes" class="form-label fw-bold small text-light">اسامی یا دامنه‌های رقبای اصلی و استراتژی اولیه</label>
+                    <textarea asp-for="Notes" rows="3" class="form-control bg-dark text-light border-secondary" placeholder="مثال: رقیب اول payadata.ir با نقطه قوت در بازاریابی محتوا، رقیب دوم aryasmart.com با سئوی فنی ضعیف..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-faradid-outline px-4" onclick="goToStep(3)">→ بازگشت به گام ۳</button>
+                    <button type="button" class="btn btn-faradid px-4" onclick="goToStep(5)">ادامه به گام نهایی (صدور کارنامه) ←</button>
+                </div>
+            </div>
+
+            <!-- STEP 5: Destination & Generation -->
+            <div class="wizard-step d-none" id="stepContent5">
+                <h5 class="fw-bold text-light mb-3 border-end border-3 border-success pe-2">گام ۵: تایید مسیر ذخیره و صدور کارنامه اول</h5>
+                <p class="text-secondary small mb-3">
+                    کارنامه جامع ۱۴ صفحه‌ای با طراحی فاخر و ساختار مستقل HTML در مسیر تعیین‌شده ذخیره خواهد شد:
+                </p>
+
+                <div class="mb-4">
+                    <label asp-for="TargetReportPath" class="form-label fw-bold small text-light">مسیر پوشه خروجی کارنامه‌ها روی سرور یا سیستم</label>
+                    <input asp-for="TargetReportPath" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="F:\SEO-Reports\irres" id="targetReportInput" />
+                    <div class="form-text text-secondary mt-2">
+                        💡 در صورت خالی بودن، مسیر استاندارد <code style="color:#00e5ff;">App_Data/exports</code> به عنوان مقصد پیش‌فرض در نظر گرفته می‌شود.
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-3 mb-4" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                    <div class="text-success fw-bold mb-1">آماده‌سازی نهایی:</div>
+                    <div class="small text-light">
+                        با فشردن دکمه زیر، پروژه ایجاد شده و اولین کارنامه استراتژیک دیده‌بانی با هوش مصنوعی و تحلیل شکاف رقبا صادر خواهد شد.
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-faradid-outline px-4" onclick="goToStep(4)">→ بازگشت به گام ۴</button>
+                    <button type="submit" class="btn btn-faradid btn-lg px-5">
+                        ⚡ ثبت نهایی و صدور کارنامه فَرادید
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    .wizard-step-indicator {
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .wizard-circle {
+        width: 36px;
+        height: 36px;
+        line-height: 34px;
+        border-radius: 50%;
+        border: 2px solid var(--brand-border);
+        background: var(--brand-surface);
+        color: var(--brand-muted);
+        margin: 0 auto;
+        font-weight: bold;
+        transition: all 0.2s;
+    }
+    .wizard-step-indicator.active .wizard-circle {
+        background: var(--brand-primary);
+        border-color: #ef4444;
+        color: #ffffff;
+        box-shadow: 0 0 14px rgba(158, 27, 50, 0.6);
+    }
+    .wizard-step-indicator.active .small {
+        color: #00e5ff !important;
+        font-weight: bold;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function goToStep(stepNum) {
+            for (let i = 1; i <= 5; i++) {
+                const content = document.getElementById('stepContent' + i);
+                const indicator = document.getElementById('stepIndicator' + i);
+                if (content && indicator) {
+                    if (i === stepNum) {
+                        content.classList.remove('d-none');
+                        indicator.classList.add('active');
+                    } else {
+                        content.classList.add('d-none');
+                        indicator.classList.remove('active');
+                    }
+                }
+            }
+        }
+
+        function validateStep1() {
+            const name = document.getElementById('projNameInput').value.trim();
+            const domain = document.getElementById('projDomainInput').value.trim();
+            if (!name || !domain) {
+                alert('لطفاً نام پروژه و دامنه سایت را در گام اول وارد فرمایید.');
+                return;
+            }
+            goToStep(2);
+        }
+
+        function toggleGscUpload(isUpload) {
+            const area = document.getElementById('gscUploadArea');
+            if (isUpload) {
+                area.classList.remove('d-none');
+            } else {
+                area.classList.add('d-none');
+            }
+        }
+    </script>
+}
