@@ -204,6 +204,72 @@ public sealed class ProjectController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    public async Task<IActionResult> SyncGscApi(Guid projectId, [FromServices] IGscApiClient gscClient)
+    {
+        try
+        {
+            var project = await _repo.GetProjectByIdAsync(projectId);
+            if (project == null) return NotFound();
+
+            if (!UserAccessHelper.CanAccessProject(User, project))
+            {
+                TempData["ErrorMessage"] = "شما مجوز همگام‌سازی این پروژه را ندارید.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var endDate = DateTime.UtcNow;
+            var startDate = endDate.AddDays(-28);
+
+            // Fetch live search analytics directly from Google Search Console API
+            var currentGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate, endDate);
+            var previousGsc = _gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین", 28);
+
+            CodebaseAuditResult? codeAudit = null;
+            if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
+            {
+                codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
+            }
+
+            var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
+            var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
+            var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
+
+            var masterReport = new FaradidMasterReport
+            {
+                ReportId = Guid.NewGuid(),
+                Project = project,
+                ActivePersona = PersonaView.Comprehensive,
+                GeneratedAtUtc = DateTime.UtcNow,
+                CurrentPeriod = currentGsc,
+                PreviousPeriod = previousGsc,
+                Comparative = comparative,
+                CodeAudit = codeAudit,
+                Competitors = competitors,
+                AiSynthesis = aiReport
+            };
+
+            var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
+                ? (Path.IsPathRooted(project.TargetReportPath) ? project.TargetReportPath : Path.Combine(AppContext.BaseDirectory, project.TargetReportPath))
+                : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
+
+            var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
+            masterReport.ExportPath = exportFile;
+
+            await _repo.SaveReportAsync(masterReport);
+
+            TempData["SuccessMessage"] = $"همگام‌سازی مستقیم با سرچ کنسول گوگل انجام شد و کارنامه هوشمند جدید صادر گردید.";
+            return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing GSC API for project {ProjectId}", projectId);
+            TempData["ErrorMessage"] = $"خطا در اتصال به API سرچ کنسول گوگل: {ex.Message}";
+            return RedirectToAction(nameof(Details), new { id = projectId });
+        }
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(Guid id)
     {
         var project = await _repo.GetProjectByIdAsync(id);

@@ -48,6 +48,10 @@
                             @(string.IsNullOrWhiteSpace(Model.TargetReportPath) ? "پیش‌فرض سامانه" : Model.TargetReportPath)
                         </div>
                     </li>
+                    <li class="mb-2 d-flex justify-content-between border-bottom border-secondary pb-2">
+                        <span class="text-secondary">سرویس سرچ کنسول:</span>
+                        <span class="badge bg-success-subtle text-success">Google API Sync 🟢</span>
+                    </li>
                 </ul>
 
                 @if (!string.IsNullOrWhiteSpace(Model.Notes))
@@ -62,6 +66,31 @@
 
         <!-- Run Audit & Generation Card -->
         <div class="col-lg-8">
+            <!-- Google Search Console API Realtime Integration Banner -->
+            <div class="card-faradid p-4 mb-4" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(0, 229, 255, 0.04)); border: 1px solid rgba(16, 185, 129, 0.3);">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="fs-1 text-success">🔄</div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h5 class="fw-bold mb-0 text-light">اتصال مستقیم به Google Search Console API</h5>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">متصل و زمان‌بندی‌شده 🟢</span>
+                            </div>
+                            <div class="small text-secondary mt-1">
+                                همگام‌سازی مستقیم از طریق API رسمی گوگل • بدون نیاز به دانلود دستی فایل CSV • صدور خودکار ماهانه
+                            </div>
+                        </div>
+                    </div>
+                    <form asp-action="SyncGscApi" method="post" class="m-0">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="projectId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-success d-flex align-items-center gap-2 shadow">
+                            <span>⚡ همگام‌سازی زنده با سرچ کنسول گوگل (API Sync)</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <div class="card-faradid p-4 p-md-5">
                 <div class="d-flex align-items-center gap-3 mb-4">
                     <div class="fs-1">⚡</div>

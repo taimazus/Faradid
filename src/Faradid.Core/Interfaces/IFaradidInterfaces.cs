@@ -56,3 +56,15 @@ public interface IProjectRepository
     Task<FaradidMasterReport?> GetReportByIdAsync(Guid reportId, CancellationToken ct = default);
     Task<IReadOnlyList<FaradidMasterReport>> GetReportsByProjectIdAsync(Guid projectId, CancellationToken ct = default);
 }
+
+public interface IGscApiClient
+{
+    Task<GscPeriodSummary> FetchSearchAnalyticsAsync(string siteUrl, DateTime startDate, DateTime endDate, CancellationToken ct = default);
+    Task<bool> VerifySiteAccessAsync(string siteUrl, CancellationToken ct = default);
+    Task<bool> IsConfiguredAsync(CancellationToken ct = default);
+}
+
+public interface IScheduledReportService
+{
+    Task<int> ExecuteScheduledCycleAsync(CancellationToken ct = default);
+}

@@ -3,6 +3,7 @@ using Faradid.Core.Interfaces;
 using Faradid.Engine;
 using Faradid.Web.Authentication;
 using Faradid.Web.Repositories;
+using Faradid.Web.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,12 @@ builder.Services.AddScoped<IComparativeAnalyticsEngine, ComparativeAnalyticsEngi
 builder.Services.AddScoped<ICompetitorBenchmarkingEngine, CompetitorBenchmarkingEngine>();
 builder.Services.AddScoped<IAiCopilotService, FaradidAiCopilot>();
 builder.Services.AddScoped<IReportExporter, HtmlReportExporter>();
+
+// Google Search Console API Client & Scheduled Background Automation
+builder.Services.AddHttpClient<IGscApiClient, GoogleSearchConsoleApiClient>();
+builder.Services.AddSingleton<ScheduledReportBackgroundService>();
+builder.Services.AddSingleton<IScheduledReportService>(sp => sp.GetRequiredService<ScheduledReportBackgroundService>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<ScheduledReportBackgroundService>());
 
 var app = builder.Build();
 

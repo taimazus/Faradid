@@ -30,11 +30,15 @@
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
+            <button id="btnDownloadNativePdf" onclick="downloadNativePdf()" class="btn btn-danger btn-lg d-flex align-items-center gap-2 shadow" style="background: linear-gradient(135deg, #ef4444, #b91c1c); border: none; font-weight: 700;">
+                <span class="spinner-border spinner-border-sm d-none" id="pdfSpinner" role="status"></span>
+                <span id="pdfBtnText">📄 دانلود مستقیم فایل PDF رسمی (A4)</span>
+            </button>
             <button id="btnPrintDossier" onclick="window.print()" class="btn btn-faradid btn-lg d-flex align-items-center gap-2 shadow">
-                <span>🖨️ چاپ کارنامه رسمی / ذخیره به PDF (سند ۱۴ صفحه‌ای)</span>
+                <span>🖨️ چاپ کارنامه رسمی / پرینت مرورگر</span>
             </button>
             <a asp-action="Download" asp-route-id="@Model.ReportId" id="btnDownloadDossier" class="btn btn-faradid-outline d-flex align-items-center gap-2">
-                <span>📥 دانلود فایل مستقل HTML (۱۴ صفحه کامل)</span>
+                <span>📥 دانلود فایل مستقل HTML</span>
             </a>
             <a asp-controller="Project" asp-action="Details" asp-route-id="@p.Id" class="btn btn-outline-secondary btn-sm">
                 بازگشت به پروژه
@@ -1610,6 +1614,79 @@
 </div>
 
 @section Scripts {
+<script src="~/lib/html2pdf/html2pdf.bundle.min.js"></script>
+<script>
+    let currentPersona = 'all';
+
+    async function downloadNativePdf() {
+        const btn = document.getElementById('btnDownloadNativePdf');
+        const spinner = document.getElementById('pdfSpinner');
+        const btnText = document.getElementById('pdfBtnText');
+
+        try {
+            btn.classList.add('disabled');
+            spinner.classList.remove('d-none');
+            btnText.textContent = 'درحال آماده‌سازی و رندر فایل PDF...';
+
+            // Select active visible sheets
+            const activeSheets = Array.from(document.querySelectorAll('.a4-sheet')).filter(s => s.style.display !== 'none' && !s.classList.contains('persona-hidden'));
+            
+            // Build temporary A4 print stage
+            const stage = document.createElement('div');
+            stage.id = 'pdf-render-stage';
+            stage.style.width = '210mm';
+            stage.style.margin = '0 auto';
+            stage.style.background = '#ffffff';
+            stage.style.direction = 'rtl';
+
+            activeSheets.forEach((sheet, idx) => {
+                const clone = sheet.cloneNode(true);
+                clone.style.width = '210mm';
+                clone.style.minHeight = '297mm';
+                clone.style.height = 'auto';
+                clone.style.boxShadow = 'none';
+                clone.style.border = 'none';
+                clone.style.margin = '0';
+                clone.style.boxSizing = 'border-box';
+                clone.style.pageBreakAfter = (idx < activeSheets.length - 1) ? 'always' : 'auto';
+                clone.style.breakAfter = (idx < activeSheets.length - 1) ? 'page' : 'auto';
+                stage.appendChild(clone);
+            });
+
+            const cleanDomain = '@Model.Project.Domain'.replace(/\./g, '-');
+            const filename = `Faradid-Official-Report-${cleanDomain}-${currentPersona}.pdf`;
+
+            const opt = {
+                margin: [0, 0, 0, 0],
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    letterRendering: true,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            await html2pdf().set(opt).from(stage).save();
+
+            btnText.textContent = '✅ فایل PDF با موفقیت دانلود شد';
+            setTimeout(() => {
+                btnText.textContent = '📄 دانلود مستقیم فایل PDF رسمی (A4)';
+                btn.classList.remove('disabled');
+                spinner.classList.add('d-none');
+            }, 3000);
+        } catch (err) {
+            console.error('Error in PDF generation:', err);
+            alert('تولید PDF با خطا مواجه شد: ' + err.message + '\nمی‌توانید از دکمه «چاپ کارنامه رسمی / پرینت مرورگر» استفاده فرمایید.');
+            btnText.textContent = '📄 دانلود مستقیم فایل PDF رسمی (A4)';
+            btn.classList.remove('disabled');
+            spinner.classList.add('d-none');
+        }
+    }
+
 <script>
     const personaConfigs = {
         'all': {
@@ -1645,6 +1722,7 @@
     };
 
     function setPersona(persona) {
+        currentPersona = persona;
         if (!personaConfigs[persona]) persona = 'all';
         const config = personaConfigs[persona];
 
