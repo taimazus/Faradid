@@ -111,4 +111,27 @@ public sealed class UserAccessHelperTests
         var filtered = UserAccessHelper.FilterProjects(superAdmin, _sampleProjects);
         Assert.Equal(3, filtered.Count);
     }
+
+    [Fact]
+    public void AdminUser_SalvaNosrati_CanAccessAllProjects()
+    {
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString("N")),
+            new Claim(ClaimTypes.Name, "سرکار خانم سلوا نصرتی (مدیر ارشد سامانه)"),
+            new Claim(ClaimTypes.Role, "Admin"),
+            new Claim(ClaimTypes.Role, "SeoSpecialist"),
+            new Claim(ClaimTypes.Email, "salva@irres.ir"),
+            new Claim("Username", "admin")
+        };
+        var admin = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        Assert.True(UserAccessHelper.IsAdmin(admin));
+        Assert.True(UserAccessHelper.CanAccessProject(admin, _sampleProjects[0]));
+        Assert.True(UserAccessHelper.CanAccessProject(admin, _sampleProjects[1]));
+        Assert.True(UserAccessHelper.CanAccessProject(admin, _sampleProjects[2]));
+
+        var filtered = UserAccessHelper.FilterProjects(admin, _sampleProjects);
+        Assert.Equal(3, filtered.Count);
+    }
 }
