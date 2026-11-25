@@ -21,9 +21,20 @@ def ensure_remote_dir(ftp, remote_path):
 def upload_directory(ftp, local_dir, remote_dir):
     ensure_remote_dir(ftp, remote_dir)
 
+    protected_rel_paths = {
+        "/App_Data/projects.json",
+        "/App_Data/seo_alarms.json",
+        "/App_Data/reports",
+        "/App_Data/local_ranks",
+        "/App_Data/crawls",
+    }
+
     for item in os.listdir(local_dir):
         local_path = os.path.join(local_dir, item)
         remote_path = f"{remote_dir}/{item}".replace("//", "/")
+        if remote_path in protected_rel_paths:
+            print(f"Skipping runtime state: {remote_path}")
+            continue
         
         if os.path.isdir(local_path):
             upload_directory(ftp, local_path, remote_path)
