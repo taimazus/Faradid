@@ -58,13 +58,21 @@
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-6">
-                        <label asp-for="ClientName" class="form-label fw-bold small text-light">نام کارفرما یا مدیرمسئول</label>
-                        <input asp-for="ClientName" class="form-control bg-dark text-light border-secondary" placeholder="مثال: مهندس رنجبر" />
+                        <label asp-for="ClientName" class="form-label fw-bold small text-light">نام کارفرما یا شرکت</label>
+                        <input asp-for="ClientName" class="form-control bg-dark text-light border-secondary" placeholder="مثال: شرکت امین صنعت اورین" />
                     </div>
                     <div class="col-md-6">
                         <label asp-for="Industry" class="form-label fw-bold small text-light">حوزه صنعت و تخصص</label>
-                        <input asp-for="Industry" class="form-control bg-dark text-light border-secondary" placeholder="مثال: توسعه نرم‌افزار و هوشمندسازی" />
+                        <input asp-for="Industry" class="form-control bg-dark text-light border-secondary" placeholder="مثال: اولین تولیدکننده دیسک تراش در ایران" />
                     </div>
+                    @if (Faradid.Web.Authentication.UserAccessHelper.IsAdmin(User))
+                    {
+                        <div class="col-12">
+                            <label asp-for="OwnerUsername" class="form-label fw-bold small text-info">شناسه کاربری دسترسی شرکت / کارفرما (OwnerUsername)</label>
+                            <input asp-for="OwnerUsername" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="مثال: yonarak (اگر یک شرکت چند سایت دارد، برای همه آن‌ها همین شناسه مشترک را وارد کنید)" />
+                            <div class="form-text text-secondary mt-1">💡 با وارد کردن شناسه مشترک کارفرما (مثل <code>yonarak</code>)، آن شرکت پس از لاگین تمام سایت‌های خود (مثلاً .com و .ir) را یکجا می‌بیند.</div>
+                        </div>
+                    }
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">

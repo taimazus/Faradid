@@ -134,4 +134,46 @@ public sealed class UserAccessHelperTests
         var filtered = UserAccessHelper.FilterProjects(admin, _sampleProjects);
         Assert.Equal(3, filtered.Count);
     }
+
+    [Fact]
+    public void ClientUser_WithMultipleSites_CanAccessAllOwnedSites()
+    {
+        var projects = new List<ProjectProfile>(_sampleProjects)
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "یونارک دیسک تراش",
+                Domain = "yonarak.com",
+                ClientName = "شرکت امین صنعت اورین",
+                OwnerUsername = "yonarak",
+                OwnerEmail = "manager@yonarak.ir"
+            },
+            new()
+            {
+                Id = Guid.NewGuid(),
+                Name = "برند دوم شرکت امین صنعت اورین",
+                Domain = "aminsanat.ir",
+                ClientName = "شرکت امین صنعت اورین",
+                OwnerUsername = "yonarak, amin_orin",
+                OwnerEmail = "info@aminsanat.ir"
+            }
+        };
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Name, "شرکت امین صنعت اورین"),
+            new Claim(ClaimTypes.Role, "Client"),
+            new Claim(ClaimTypes.Email, "manager@yonarak.ir"),
+            new Claim("Username", "yonarak")
+        };
+        var client = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
+
+        var filtered = UserAccessHelper.FilterProjects(client, projects);
+        Assert.Equal(3, filtered.Count);
+        Assert.Contains(filtered, p => p.Domain == "yonarak.ir");
+        Assert.Contains(filtered, p => p.Domain == "yonarak.com");
+        Assert.Contains(filtered, p => p.Domain == "aminsanat.ir");
+        Assert.DoesNotContain(filtered, p => p.Domain == "irres.ir");
+    }
 }

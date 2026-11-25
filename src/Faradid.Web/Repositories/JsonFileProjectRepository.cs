@@ -89,6 +89,15 @@ public sealed class JsonFileProjectRepository : IProjectRepository
                         match.TargetReportPath = seed.TargetReportPath;
                         modified = true;
                     }
+                    if (match.Domain.Equals("yonarak.ir", StringComparison.OrdinalIgnoreCase) &&
+                        match.Industry.Contains("کفسابی", StringComparison.OrdinalIgnoreCase))
+                    {
+                        match.Name = seed.Name;
+                        match.ClientName = seed.ClientName;
+                        match.Industry = seed.Industry;
+                        match.Notes = seed.Notes;
+                        modified = true;
+                    }
                 }
             }
 
@@ -194,16 +203,31 @@ public sealed class JsonFileProjectRepository : IProjectRepository
             new()
             {
                 Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                Name = "یونارک (Yonarak)",
+                Name = "یونارک صنعتی (yonarak.ir)",
                 Domain = "yonarak.ir",
-                ClientName = "گروه مهندسی و خدماتی یونارک",
-                Industry = "خدمات کفسابی، نماشویی و پیچ‌رولپلاک با طناب",
+                ClientName = "شرکت امین صنعت اورین",
+                Industry = "تولید قطعات خودرویی و ماشین‌کاری CNC",
                 LocalSourcePath = @"F:\Projects\yonarak.ir",
-                TargetReportPath = @"App_Data/exports/yonarak",
-                Notes = "خدمات صنعتی راپل و ساب سنگ در منطقه شمال‌غرب",
+                TargetReportPath = @"App_Data/exports/yonarak-ir",
+                Notes = "پرتال صنعتی شرکت امین صنعت اورین (.ir)",
                 OwnerUsername = "yonarak",
                 OwnerEmail = "manager@yonarak.ir",
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-45),
+                UpdatedAtUtc = DateTime.UtcNow
+            },
+            new()
+            {
+                Id = Guid.Parse("66666666-6666-6666-6666-666666666666"),
+                Name = "یونارک دیسک تراش (yonarak.com)",
+                Domain = "yonarak.com",
+                ClientName = "شرکت امین صنعت اورین",
+                Industry = "اولین تولیدکننده دیسک تراش در ایران",
+                LocalSourcePath = @"F:\Projects\yonarak.com",
+                TargetReportPath = @"App_Data/exports/yonarak-com",
+                Notes = "اولین تولیدکننده دستگاه دیسک تراش روکار و رومیزی در ایران (.com)",
+                OwnerUsername = "yonarak",
+                OwnerEmail = "manager@yonarak.ir",
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-35),
                 UpdatedAtUtc = DateTime.UtcNow
             },
             new()

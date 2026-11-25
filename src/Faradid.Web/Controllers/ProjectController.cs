@@ -88,9 +88,19 @@ public sealed class ProjectController : Controller
         model.CreatedAtUtc = DateTime.UtcNow;
         model.UpdatedAtUtc = DateTime.UtcNow;
 
-        // Auto-assign owner to current user
-        model.OwnerUsername = User.FindFirst("Username")?.Value ?? User.Identity?.Name ?? "admin";
-        model.OwnerEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "admin@irres.ir";
+        // Auto-assign owner to current user only if Admin didn't specify a client username
+        if (string.IsNullOrWhiteSpace(model.OwnerUsername) || !UserAccessHelper.IsAdmin(User))
+        {
+            model.OwnerUsername = User.FindFirst("Username")?.Value ?? User.Identity?.Name ?? "admin";
+        }
+        else
+        {
+            model.OwnerUsername = model.OwnerUsername.Trim().ToLowerInvariant();
+        }
+        if (string.IsNullOrWhiteSpace(model.OwnerEmail))
+        {
+            model.OwnerEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "admin@irres.ir";
+        }
 
         if (string.IsNullOrWhiteSpace(model.TargetReportPath) || model.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase))
         {

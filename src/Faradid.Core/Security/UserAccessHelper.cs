@@ -67,10 +67,13 @@ public static class UserAccessHelper
         var username = user.FindFirst("Username")?.Value ?? user.Identity.Name ?? string.Empty;
         var email = user.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
 
-        if (!string.IsNullOrWhiteSpace(project.OwnerUsername) &&
-            project.OwnerUsername.Equals(username, StringComparison.OrdinalIgnoreCase))
+        if (!string.IsNullOrWhiteSpace(project.OwnerUsername))
         {
-            return true;
+            var owners = project.OwnerUsername.Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (owners.Any(o => o.Trim().Equals(username, StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(project.OwnerEmail) &&
