@@ -123,6 +123,10 @@
                     <textarea name="gscCsvContent" rows="4" class="form-control bg-dark text-light border-secondary font-monospace" placeholder="Query,Clicks,Impressions,CTR,Position..."></textarea>
                 </div>
 
+                <div class="mb-4">
+                    <partial name="_GscOnboardingBox" view-data='new ViewDataDictionary(ViewData) { { "GscDomain", "دامنه جدید شما" }, { "ServiceAccountEmail", ViewBag.ServiceAccountEmail as string } }' />
+                </div>
+
                 <div class="d-flex justify-content-between mt-4">
                     <button type="button" class="btn btn-faradid-outline px-4" onclick="goToStep(2)">→ بازگشت به گام ۲</button>
                     <button type="button" class="btn btn-faradid px-4" onclick="goToStep(4)">ادامه به گام ۴ (رقبا) ←</button>

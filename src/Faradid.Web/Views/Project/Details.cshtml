@@ -195,6 +195,12 @@
                         </button>
                     </form>
                 </div>
+                @if (!isGscConnected)
+                {
+                    <div class="mt-3">
+                        <partial name="_GscOnboardingBox" view-data='new ViewDataDictionary(ViewData) { { "GscDomain", Model.Domain }, { "ServiceAccountEmail", serviceAccountEmail }, { "GscDiagnostic", ViewBag.GscDiagnostic as string } }' />
+                    </div>
+                }
             </div>
 
             <div class="card-faradid p-4 p-md-5">

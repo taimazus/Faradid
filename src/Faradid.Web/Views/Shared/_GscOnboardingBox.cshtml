@@ -1,0 +1,55 @@
+@{
+    var saEmail = ViewData["ServiceAccountEmail"] as string ?? "indexing-bot@still-manifest-501707-f2.iam.gserviceaccount.com";
+    var diagnostic = ViewData["GscDiagnostic"] as string;
+    var domain = ViewData["GscDomain"] as string ?? "دامنه شما";
+}
+
+<div class="p-3 p-md-4 rounded-3 border" style="background: rgba(245, 158, 11, 0.06); border-color: rgba(245, 158, 11, 0.35) !important;">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <h6 class="fw-bold text-warning mb-0">🔌 راهنمای گام‌به‌گام اتصال مستقیم به Google Search Console</h6>
+        <span class="badge bg-warning text-dark">دریافت داده‌های ۱۰۰٪ واقعی</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(diagnostic))
+    {
+        <div class="small text-light mb-3 p-2 rounded" style="background: rgba(0, 0, 0, 0.25); border-right: 3px solid #f59e0b;">
+            <strong>وضعیت فعلی بررسی اتصال برای «@domain»:</strong> @diagnostic
+        </div>
+    }
+
+    <p class="small text-secondary mb-3" style="line-height: 1.8;">
+        تا زمانی که ربات رسمی سامانه در سرچ کنسول گوگل مجوز دسترسی نداشته باشد (یا فایل CSV سرچ کنسول بارگذاری نشود)، آمار بر اساس مدل برآوردی موضوعی محاسبه می‌شود. برای دریافت خودکار اعداد و کلمات کلیدی واقعی گوگل، ۴ گام زیر را انجام دهید:
+    </p>
+
+    <ol class="small text-light ps-3 mb-3" style="line-height: 2;">
+        <li>وارد پنل <a href="https://search.google.com/search-console" target="_blank" class="text-info text-decoration-none fw-bold">Google Search Console ↗</a> شوید و دامنه <strong class="text-info">@domain</strong> را انتخاب کنید.</li>
+        <li>از منوی سمت چپ وارد بخش <strong>Settings</strong> ← <strong>Users and permissions</strong> شوید و روی <strong>Add user</strong> کلیک کنید.</li>
+        <li>
+            ایمیل ربات زیر را عیناً کپی و با سطح دسترسی <strong>Full</strong> (یا Restricted) اضافه کنید:
+            <div class="input-group input-group-sm my-2" style="max-width: 560px;">
+                <input type="text" class="form-control bg-dark text-info font-monospace gsc-sa-email-input" style="direction: ltr; font-size: 12px;" value="@saEmail" readonly />
+                <button type="button" class="btn btn-outline-warning fw-bold" onclick="copyGscServiceAccount(this)">📋 کپی ایمیل ربات</button>
+            </div>
+        </li>
+        <li>پس از ذخیره در سرچ کنسول گوگل، روی دکمه <strong>«⚡ همگام‌سازی زنده با سرچ کنسول گوگل (API Sync)»</strong> کلیک کنید.</li>
+    </ol>
+
+    <div class="small text-secondary p-2 rounded" style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.15);">
+        💡 <strong>روش جایگزین (آپلود دستی CSV):</strong> در سرچ کنسول به بخش <strong>Performance</strong> بروید، بالا سمت راست روی <strong>Export → Download CSV</strong> کلیک کنید و محتوای فایل <code class="text-info">Queries.csv</code> را در بخش «ورود دستی یا بارگذاری فایل CSV» وارد نمایید.
+    </div>
+</div>
+
+<script>
+    if (typeof copyGscServiceAccount !== 'function') {
+        function copyGscServiceAccount(btn) {
+            const group = btn.closest('.input-group');
+            const input = group ? group.querySelector('.gsc-sa-email-input') : null;
+            if (!input) return;
+            navigator.clipboard.writeText(input.value).then(() => {
+                const oldText = btn.textContent;
+                btn.textContent = '✅ کپی شد!';
+                setTimeout(() => { btn.textContent = oldText; }, 2000);
+            });
+        }
+    }
+</script>

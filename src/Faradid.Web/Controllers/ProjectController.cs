@@ -55,8 +55,9 @@ public sealed class ProjectController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create()
+    public IActionResult Create([FromServices] Microsoft.Extensions.Configuration.IConfiguration config)
     {
+        ViewBag.ServiceAccountEmail = config["GoogleSearchConsole:ServiceAccountEmail"] ?? "indexing-bot@still-manifest-501707-f2.iam.gserviceaccount.com";
         return View(new ProjectProfile());
     }
 
@@ -145,6 +146,7 @@ public sealed class ProjectController : Controller
         ViewBag.CrawlResult = await crawler.GetLatestCrawlResultAsync(id);
         ViewBag.ActiveAlarms = await alarmEngine.GetAlarmsByProjectAsync(id);
         ViewBag.IsGscConnected = await gscClient.VerifySiteAccessAsync(project.Domain);
+        ViewBag.GscDiagnostic = await gscClient.GetDiagnosticStatusAsync(project.Domain);
         ViewBag.ServiceAccountEmail = config["GoogleSearchConsole:ServiceAccountEmail"] ?? "indexing-bot@still-manifest-501707-f2.iam.gserviceaccount.com";
 
         return View(project);
