@@ -124,7 +124,8 @@
                 </div>
 
                 <div class="mb-4">
-                    <partial name="_GscOnboardingBox" view-data='new ViewDataDictionary(ViewData) { { "GscDomain", "دامنه جدید شما" }, { "ServiceAccountEmail", ViewBag.ServiceAccountEmail as string } }' />
+                    @{ ViewData["GscDomain"] = "دامنه جدید شما"; }
+                    <partial name="_GscOnboardingBox" />
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
