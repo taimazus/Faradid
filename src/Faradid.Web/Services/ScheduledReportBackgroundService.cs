@@ -61,12 +61,14 @@ public sealed class ScheduledReportBackgroundService : BackgroundService, ISched
         using var scope = _services.CreateScope();
         var repo = scope.ServiceProvider.GetRequiredService<IProjectRepository>();
         var gscClient = scope.ServiceProvider.GetRequiredService<IGscApiClient>();
-        var gscParser = scope.ServiceProvider.GetRequiredService<IGscDataParser>();
         var auditor = scope.ServiceProvider.GetRequiredService<ILocalSourceAuditor>();
         var comparativeEngine = scope.ServiceProvider.GetRequiredService<IComparativeAnalyticsEngine>();
         var competitorEngine = scope.ServiceProvider.GetRequiredService<ICompetitorBenchmarkingEngine>();
         var aiCopilot = scope.ServiceProvider.GetRequiredService<IAiCopilotService>();
         var exporter = scope.ServiceProvider.GetRequiredService<IReportExporter>();
+        var localRankTracker = scope.ServiceProvider.GetRequiredService<ILocalRankTrackerService>();
+        var crawler = scope.ServiceProvider.GetRequiredService<ISiteCrawlerService>();
+        var alarmEngine = scope.ServiceProvider.GetRequiredService<ISeoAlarmEngine>();
 
         var projects = await repo.GetAllProjectsAsync(ct);
         int generatedCount = 0;
@@ -75,21 +77,31 @@ public sealed class ScheduledReportBackgroundService : BackgroundService, ISched
         {
             try
             {
+                await localRankTracker.GetOrUpdateLocalRanksAsync(project, ct);
+
                 var reports = await repo.GetReportsByProjectIdAsync(project.Id, ct);
                 var latestReport = reports.OrderByDescending(r => r.GeneratedAtUtc).FirstOrDefault();
 
-                // If no report or latest report is older than 7 days, generate an updated one
-                bool shouldGenerate = latestReport == null || (DateTime.UtcNow - latestReport.GeneratedAtUtc).TotalDays >= 7;
+                bool gscConnected = await gscClient.VerifySiteAccessAsync(project.Domain, ct);
+                bool shouldUpgradeToLive = latestReport != null && !latestReport.CurrentPeriod.IsLiveData && gscConnected;
+                bool shouldGenerate = latestReport == null
+                    || (DateTime.UtcNow - latestReport.GeneratedAtUtc).TotalDays >= 7
+                    || shouldUpgradeToLive;
 
                 if (shouldGenerate)
                 {
-                    _logger.LogInformation("Auto-generating scheduled report for project {ProjectName} ({Domain})", project.Name, project.Domain);
+                    _logger.LogInformation("Auto-generating scheduled report for project {ProjectName} ({Domain}) [LiveGSC={Live}]", project.Name, project.Domain, gscConnected);
 
-                    var endDate = DateTime.UtcNow;
+                    if (await crawler.GetLatestCrawlResultAsync(project.Id, ct) == null)
+                    {
+                        await crawler.CrawlDomainAsync(project, 10, ct);
+                    }
+
+                    var endDate = DateTime.UtcNow.Date;
                     var startDate = endDate.AddDays(-28);
 
                     var currentGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate, endDate, ct);
-                    var previousGsc = gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین (۲۸ روز قبل)", 28);
+                    var previousGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate.AddDays(-28), startDate, ct);
 
                     CodebaseAuditResult? codeAudit = null;
                     if (!string.IsNullOrWhiteSpace(project.LocalSourcePath) && Directory.Exists(project.LocalSourcePath))
@@ -123,6 +135,8 @@ public sealed class ScheduledReportBackgroundService : BackgroundService, ISched
                     masterReport.ExportPath = exportFile;
 
                     await repo.SaveReportAsync(masterReport, ct);
+                    await localRankTracker.RefreshLocalRanksAsync(project, ct);
+                    await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit, ct);
                     generatedCount++;
                     _logger.LogInformation("Scheduled report generated successfully for {Domain}. ReportId: {ReportId}", project.Domain, masterReport.ReportId);
                 }

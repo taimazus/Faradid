@@ -62,7 +62,11 @@ public sealed class ProjectController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(ProjectProfile model)
+    public async Task<IActionResult> Create(
+        ProjectProfile model,
+        [FromServices] IGscApiClient gscClient,
+        [FromServices] ISiteCrawlerService crawler,
+        [FromServices] ILocalRankTrackerService localRankTracker)
     {
         if (string.IsNullOrWhiteSpace(model.Name) || string.IsNullOrWhiteSpace(model.Domain))
         {
@@ -71,7 +75,15 @@ public sealed class ProjectController : Controller
         }
 
         // Clean domain
-        model.Domain = model.Domain.Trim().ToLowerInvariant().Replace("https://", "").Replace("http://", "").TrimEnd('/');
+        model.Domain = model.Domain.Trim().ToLowerInvariant()
+            .Replace("https://", "")
+            .Replace("http://", "")
+            .TrimEnd('/');
+        if (model.Domain.StartsWith("www."))
+        {
+            model.Domain = model.Domain.Substring(4);
+        }
+
         model.CreatedAtUtc = DateTime.UtcNow;
         model.UpdatedAtUtc = DateTime.UtcNow;
 
@@ -85,6 +97,25 @@ public sealed class ProjectController : Controller
         }
 
         await _repo.SaveProjectAsync(model);
+
+        // Immediately initialize real crawl, local SERP, and first live GSC report if accessible
+        try
+        {
+            await crawler.CrawlDomainAsync(model, 10);
+            await localRankTracker.RefreshLocalRanksAsync(model);
+
+            if (await gscClient.VerifySiteAccessAsync(model.Domain))
+            {
+                var report = await BuildAndSaveReportAsync(model, PersonaView.Executive, null, gscClient, localRankTracker);
+                TempData["SuccessMessage"] = $"پروژه «{model.Name}» ایجاد و اولین کارنامه واقعی از Google Search Console صادر شد.";
+                return RedirectToAction("ViewReport", "Report", new { id = report.ReportId });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Initial auto-sync failed for newly created project {Domain}", model.Domain);
+        }
+
         TempData["SuccessMessage"] = $"پروژه «{model.Name}» با موفقیت ایجاد گردید.";
         return RedirectToAction(nameof(Details), new { id = model.Id });
     }
@@ -92,9 +123,11 @@ public sealed class ProjectController : Controller
     [HttpGet]
     public async Task<IActionResult> Details(
         Guid id,
+        [FromServices] IGscApiClient gscClient,
         [FromServices] ILocalRankTrackerService localRankTracker,
         [FromServices] ISiteCrawlerService crawler,
-        [FromServices] ISeoAlarmEngine alarmEngine)
+        [FromServices] ISeoAlarmEngine alarmEngine,
+        [FromServices] Microsoft.Extensions.Configuration.IConfiguration config)
     {
         var project = await _repo.GetProjectByIdAsync(id);
         if (project == null) return NotFound();
@@ -111,6 +144,8 @@ public sealed class ProjectController : Controller
         ViewBag.LocalRanks = await localRankTracker.GetOrUpdateLocalRanksAsync(project);
         ViewBag.CrawlResult = await crawler.GetLatestCrawlResultAsync(id);
         ViewBag.ActiveAlarms = await alarmEngine.GetAlarmsByProjectAsync(id);
+        ViewBag.IsGscConnected = await gscClient.VerifySiteAccessAsync(project.Domain);
+        ViewBag.ServiceAccountEmail = config["GoogleSearchConsole:ServiceAccountEmail"] ?? "indexing-bot@still-manifest-501707-f2.iam.gserviceaccount.com";
 
         return View(project);
     }
@@ -127,7 +162,13 @@ public sealed class ProjectController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> GenerateReport(Guid projectId, string? gscCsvContent = null, string? persona = "Executive")
+    public async Task<IActionResult> GenerateReport(
+        Guid projectId,
+        [FromServices] IGscApiClient gscClient,
+        [FromServices] ILocalRankTrackerService localRankTracker,
+        [FromServices] ISiteCrawlerService crawler,
+        string? gscCsvContent = null,
+        string? persona = "Executive")
     {
         try
         {
@@ -142,70 +183,17 @@ public sealed class ProjectController : Controller
 
             var activePersona = Enum.TryParse<PersonaView>(persona, true, out var parsedPersona) ? parsedPersona : PersonaView.Executive;
 
-            // 1. Ingest or generate GSC period summaries
-            GscPeriodSummary currentGsc;
-            if (!string.IsNullOrWhiteSpace(gscCsvContent))
+            // Ensure at least one crawl snapshot exists for real on-page diagnostics
+            if (await crawler.GetLatestCrawlResultAsync(project.Id) == null)
             {
-                using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gscCsvContent));
-                currentGsc = await _gscParser.ParseCsvAsync(stream, "ماه جاری (Current Month)");
-            }
-            else
-            {
-                currentGsc = _gscParser.CreatePresetData(project.Domain, "دوره ۲۸ روزه اخیر", 28);
+                await crawler.CrawlDomainAsync(project, 10);
             }
 
-            var previousGsc = _gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین", 28);
+            var masterReport = await BuildAndSaveReportAsync(project, activePersona, gscCsvContent, gscClient, localRankTracker);
 
-            // 2. Perform Codebase Audit if local path provided
-            CodebaseAuditResult? codeAudit = null;
-            if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
-            {
-                codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
-            }
-
-            // 3. Compute comparative metrics & VPN/Crisis anomalies
-            var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
-
-            // 4. Benchmark competitors
-            var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
-
-            // 5. Generate AI Copilot strategic synthesis & 4 editorial articles
-            var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
-
-            // 6. Build Master Report
-            var masterReport = new FaradidMasterReport
-            {
-                ReportId = Guid.NewGuid(),
-                Project = project,
-                ActivePersona = activePersona,
-                GeneratedAtUtc = DateTime.UtcNow,
-                CurrentPeriod = currentGsc,
-                PreviousPeriod = previousGsc,
-                Comparative = comparative,
-                CodeAudit = codeAudit,
-                Competitors = competitors,
-                AiSynthesis = aiReport
-            };
-
-            // 7. Export HTML safely to target destination
-            var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
-                ? (Path.IsPathRooted(project.TargetReportPath) ? project.TargetReportPath : Path.Combine(AppContext.BaseDirectory, project.TargetReportPath))
-                : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
-
-            var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
-            masterReport.ExportPath = exportFile;
-
-            // 8. Save report in repository
-            await _repo.SaveReportAsync(masterReport);
-
-            // 9. Evaluate real-time SEO alarms
-            var alarmEngine = HttpContext.RequestServices.GetService<ISeoAlarmEngine>();
-            if (alarmEngine != null)
-            {
-                await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit);
-            }
-
-            TempData["SuccessMessage"] = $"کارنامه جامع فَرادید برای {project.Name} با موفقیت صادر گردید.";
+            TempData["SuccessMessage"] = masterReport.CurrentPeriod.IsLiveData
+                ? $"کارنامه واقعی فَرادید برای {project.Name} از داده‌های زنده سرچ کنسول گوگل صادر گردید."
+                : $"کارنامه جامع فَرادید برای {project.Name} با موفقیت صادر گردید.";
             return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
         }
         catch (Exception ex)
@@ -218,7 +206,10 @@ public sealed class ProjectController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SyncGscApi(Guid projectId, [FromServices] IGscApiClient gscClient)
+    public async Task<IActionResult> SyncGscApi(
+        Guid projectId,
+        [FromServices] IGscApiClient gscClient,
+        [FromServices] ILocalRankTrackerService localRankTracker)
     {
         try
         {
@@ -231,53 +222,17 @@ public sealed class ProjectController : Controller
                 return RedirectToAction(nameof(Index));
             }
 
-            var endDate = DateTime.UtcNow;
-            var startDate = endDate.AddDays(-28);
+            var masterReport = await BuildAndSaveReportAsync(project, PersonaView.Comprehensive, null, gscClient, localRankTracker);
 
-            // Fetch live search analytics directly from Google Search Console API
-            var currentGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate, endDate);
-            var previousGsc = _gscParser.CreatePresetData(project.Domain, "دوره مشابه پیشین", 28);
-
-            CodebaseAuditResult? codeAudit = null;
-            if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
+            if (masterReport.CurrentPeriod.IsLiveData)
             {
-                codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
+                TempData["SuccessMessage"] = $"همگام‌سازی زنده با سرچ کنسول گوگل ({masterReport.CurrentPeriod.ResolvedPropertyUrl}) انجام شد و کارنامه واقعی صادر گردید.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = $"دامنه {project.Domain} هنوز در سرچ کنسول به Service Account دسترسی ندارد؛ کارنامه بر اساس داده‌های برآوردی موضوعی صادر شد.";
             }
 
-            var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
-            var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
-            var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
-
-            var masterReport = new FaradidMasterReport
-            {
-                ReportId = Guid.NewGuid(),
-                Project = project,
-                ActivePersona = PersonaView.Comprehensive,
-                GeneratedAtUtc = DateTime.UtcNow,
-                CurrentPeriod = currentGsc,
-                PreviousPeriod = previousGsc,
-                Comparative = comparative,
-                CodeAudit = codeAudit,
-                Competitors = competitors,
-                AiSynthesis = aiReport
-            };
-
-            var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
-                ? (Path.IsPathRooted(project.TargetReportPath) ? project.TargetReportPath : Path.Combine(AppContext.BaseDirectory, project.TargetReportPath))
-                : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
-
-            var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
-            masterReport.ExportPath = exportFile;
-
-            await _repo.SaveReportAsync(masterReport);
-
-            var alarmEngine = HttpContext.RequestServices.GetService<ISeoAlarmEngine>();
-            if (alarmEngine != null)
-            {
-                await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit);
-            }
-
-            TempData["SuccessMessage"] = $"همگام‌سازی مستقیم با سرچ کنسول گوگل انجام شد و کارنامه هوشمند جدید صادر گردید.";
             return RedirectToAction("ViewReport", "Report", new { id = masterReport.ReportId });
         }
         catch (Exception ex)
@@ -286,6 +241,88 @@ public sealed class ProjectController : Controller
             TempData["ErrorMessage"] = $"خطا در اتصال به API سرچ کنسول گوگل: {ex.Message}";
             return RedirectToAction(nameof(Details), new { id = projectId });
         }
+    }
+
+    private async Task<FaradidMasterReport> BuildAndSaveReportAsync(
+        ProjectProfile project,
+        PersonaView activePersona,
+        string? gscCsvContent,
+        IGscApiClient gscClient,
+        ILocalRankTrackerService localRankTracker)
+    {
+        var endDate = DateTime.UtcNow.Date;
+        var startDate = endDate.AddDays(-28);
+
+        // 1. Ingest live GSC API data (for BOTH current & previous 28-day periods) or CSV
+        GscPeriodSummary currentGsc;
+        GscPeriodSummary previousGsc;
+
+        if (!string.IsNullOrWhiteSpace(gscCsvContent))
+        {
+            using var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(gscCsvContent));
+            currentGsc = await _gscParser.ParseCsvAsync(stream, "ماه جاری (CSV)");
+            currentGsc.IsLiveData = true;
+            currentGsc.DataSource = "فایل CSV بارگذاری‌شده از سرچ کنسول";
+            previousGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate.AddDays(-28), startDate);
+        }
+        else
+        {
+            currentGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate, endDate);
+            previousGsc = await gscClient.FetchSearchAnalyticsAsync(project.Domain, startDate.AddDays(-28), startDate);
+        }
+
+        // 2. Perform Codebase Audit if local path provided and exists on this host
+        CodebaseAuditResult? codeAudit = null;
+        if (!string.IsNullOrWhiteSpace(project.LocalSourcePath))
+        {
+            codeAudit = await _auditor.AuditPathAsync(project.LocalSourcePath, project.Id);
+        }
+
+        // 3. Compute comparative metrics & VPN/Crisis anomalies
+        var comparative = _comparativeEngine.ComputeComparison(currentGsc, previousGsc);
+
+        // 4. Benchmark competitors
+        var competitors = _competitorEngine.Benchmark(project, currentGsc, Array.Empty<CompetitorProfile>());
+
+        // 5. Generate AI Copilot strategic synthesis & 4 editorial articles
+        var aiReport = await _aiCopilot.GenerateInsightsAsync(project, currentGsc, comparative, competitors, codeAudit);
+
+        // 6. Build Master Report
+        var masterReport = new FaradidMasterReport
+        {
+            ReportId = Guid.NewGuid(),
+            Project = project,
+            ActivePersona = activePersona,
+            GeneratedAtUtc = DateTime.UtcNow,
+            CurrentPeriod = currentGsc,
+            PreviousPeriod = previousGsc,
+            Comparative = comparative,
+            CodeAudit = codeAudit,
+            Competitors = competitors,
+            AiSynthesis = aiReport
+        };
+
+        // 7. Export HTML safely to target destination
+        var targetDir = !string.IsNullOrWhiteSpace(project.TargetReportPath) && !project.TargetReportPath.StartsWith("F:", StringComparison.OrdinalIgnoreCase)
+            ? (Path.IsPathRooted(project.TargetReportPath) ? project.TargetReportPath : Path.Combine(AppContext.BaseDirectory, project.TargetReportPath))
+            : Path.Combine(AppContext.BaseDirectory, "App_Data", "exports", project.Domain);
+
+        var exportFile = await _exporter.ExportHtmlAsync(masterReport, targetDir);
+        masterReport.ExportPath = exportFile;
+
+        // 8. Save report in repository
+        await _repo.SaveReportAsync(masterReport);
+
+        // 9. Keep Local SERP synced and evaluate SEO alarms
+        await localRankTracker.RefreshLocalRanksAsync(project);
+
+        var alarmEngine = HttpContext?.RequestServices.GetService<ISeoAlarmEngine>();
+        if (alarmEngine != null)
+        {
+            await alarmEngine.EvaluateAlarmsAsync(project, currentGsc, previousGsc, codeAudit);
+        }
+
+        return masterReport;
     }
 
     [HttpPost]

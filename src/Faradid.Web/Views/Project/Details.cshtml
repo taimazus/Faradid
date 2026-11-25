@@ -6,6 +6,8 @@
     var crawlResult = ViewBag.CrawlResult as Faradid.Core.Models.SiteCrawlResult;
     var alarms = ViewBag.ActiveAlarms as IReadOnlyList<Faradid.Core.Models.SeoAlertLog> ?? Array.Empty<Faradid.Core.Models.SeoAlertLog>();
     var unackAlarms = alarms.Where(a => !a.IsAcknowledged).ToList();
+    var isGscConnected = ViewBag.IsGscConnected as bool? ?? false;
+    var serviceAccountEmail = ViewBag.ServiceAccountEmail as string ?? "indexing-bot@still-manifest-501707-f2.iam.gserviceaccount.com";
 }
 
 <div class="container-fluid px-lg-5 py-4">
@@ -162,12 +164,26 @@
                     <div class="d-flex align-items-center gap-3">
                         <div class="fs-1 text-success">🔄</div>
                         <div>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h5 class="fw-bold mb-0 text-light">اتصال مستقیم به Google Search Console API</h5>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">متصل و زمان‌بندی‌شده 🟢</span>
+                                @if (isGscConnected)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 11px;">متصل و فعال 🟢</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1" style="font-size: 11px;">در انتظار اعطای دسترسی در GSC 🟡</span>
+                                }
                             </div>
                             <div class="small text-secondary mt-1">
-                                همگام‌سازی مستقیم از طریق API رسمی گوگل • بدون نیاز به دانلود دستی فایل CSV • صدور خودکار ماهانه
+                                @if (isGscConnected)
+                                {
+                                    <span>همگام‌سازی مستقیم از طریق API رسمی گوگل • داده‌های واقعی و بدون واسطه</span>
+                                }
+                                else
+                                {
+                                    <span>برای دریافت داده‌های ۱۰۰٪ واقعی این دامنه، ایمیل <code class="text-info">@serviceAccountEmail</code> را در بخش Users سرچ کنسول گوگل اضافه کنید.</span>
+                                }
                             </div>
                         </div>
                     </div>
@@ -426,7 +442,17 @@
                                         @(r.CodeAudit?.TechnicalHealthScore ?? 85)/100
                                     </span>
                                 </td>
-                                <td><span class="badge bg-secondary">@r.ActivePersona</span></td>
+                                <td>
+                                    <span class="badge bg-secondary">@r.ActivePersona</span>
+                                    @if (r.CurrentPeriod.IsLiveData)
+                                    {
+                                        <span class="badge bg-success ms-1" style="font-size: 10px;">داده واقعی GSC</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1" style="font-size: 10px;">برآوردی</span>
+                                    }
+                                </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
                                         <a asp-controller="Report" asp-action="ViewReport" asp-route-id="@r.ReportId" class="btn btn-sm btn-faradid">
