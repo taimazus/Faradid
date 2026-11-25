@@ -27,19 +27,23 @@ public sealed class AiArticleWriter : IAiArticleWriter
     {
         await Task.CompletedTask;
 
-        var title = !string.IsNullOrWhiteSpace(articlePlan.Title)
-            ? articlePlan.Title
-            : $"راهنمای جامع و تخصصی {project.Industry} در تبریز و شمال‌غرب";
-
         var keyword = !string.IsNullOrWhiteSpace(articlePlan.TargetKeyword)
             ? articlePlan.TargetKeyword
-            : project.Industry;
+            : (!string.IsNullOrWhiteSpace(project.Industry) ? project.Industry : project.Name);
+
+        var locationSuffix = ($"{project.Name} {project.Industry} {project.Notes}".Contains("تبریز") || keyword.Contains("تبریز"))
+            ? "در تبریز و سراسر ایران"
+            : "در سطح کشور";
+
+        var title = !string.IsNullOrWhiteSpace(articlePlan.Title)
+            ? articlePlan.Title
+            : $"راهنمای جامع و تخصصی {keyword} ({project.Name})";
 
         var secondary = articlePlan.SecondaryKeywords.Count > 0
             ? articlePlan.SecondaryKeywords
-            : new List<string> { $"{keyword} تبریز", $"هزینه و قیمت {keyword}", $"بهترین مرکز {keyword}", $"مشاوره رایگان {keyword}" };
+            : new List<string> { $"{keyword} {project.Name}", $"قیمت {keyword}", $"راهنمای {keyword}", $"مشاوره تخصصی {keyword}" };
 
-        var metaDesc = $"بررسی تخصصی و راهنمای کامل {keyword} در تبریز توسط مهندسان شرکت راهکار الکترونیک سهند. عیب‌یابی، برآورد شفاف قیمت و گارانتی معتبر شرکتی. تماس فوری: ۰۴۱-۳۳۳۶۰۸۵۲.";
+        var metaDesc = $"بررسی تخصصی و راهنمای کامل {keyword} در حوزه {project.Industry} توسط «{project.Name}» ({project.Domain}). تحلیل فنی، برآورد هزینه و ضمانت معتبر. پشتیبانی: ۰۴۱-۳۳۳۶۰۸۵۲.";
 
         var sb = new StringBuilder();
 
@@ -47,11 +51,11 @@ public sealed class AiArticleWriter : IAiArticleWriter
         sb.AppendLine($"<div class=\"article-container\" dir=\"rtl\" style=\"font-family: 'Vazirmatn', sans-serif; line-height: 2.1; color: #1e293b;\">");
         sb.AppendLine($"  <h1 style=\"color: #0f172a; font-weight: 900; margin-bottom: 16px; font-size: 26px;\">{title}</h1>");
         sb.AppendLine($"  <div style=\"background: #f1f5f9; padding: 12px 18px; border-radius: 8px; margin-bottom: 24px; font-size: 13.5px; border-right: 4px solid #0284c7;\">");
-        sb.AppendLine($"    <strong>خلاصه اجرایی و متادیتا:</strong> این مقاله با تمرکز بر کلیدواژه کانونی <strong>«{keyword}»</strong> و استانداردهای کیفی E-E-A-T گوگل تدوین گردیده است. زمان تقریبی مطالعه: ۱۲ دقیقه • کلمات: ۲,۶۵۰ کلمه.");
+        sb.AppendLine($"    <strong>خلاصه اجرایی و متادیتا:</strong> این مقاله با تمرکز بر کلیدواژه کانونی <strong>«{keyword}»</strong> برای وب‌سایت <strong>{project.Name}</strong> ({project.Domain}) و استانداردهای کیفی E-E-A-T گوگل تدوین گردیده است. زمان تقریبی مطالعه: ۱۲ دقیقه • کلمات: ۲,۶۵۰ کلمه.");
         sb.AppendLine($"  </div>");
 
         sb.AppendLine($"  <p style=\"font-size: 15px; margin-bottom: 20px; text-align: justify;\">");
-        sb.AppendLine($"    در سال‌های اخیر، نیاز مبرم به خدمات تخصصی، مطمئن و استاندارد در حوزه <strong>{project.Industry}</strong> در کلانشهر تبریز و استان آذربایجان شرقی رشد چشمگیری داشته است. متقاضیان و کارفرمایان همواره با دغدغه‌هایی چون کیفیت قطعات، شفافیت در برآورد هزینه‌ها، سرعت عمل در ارائه خدمات و برخورداری از ضمانت‌نامه رسمی شرکتی مواجه هستند. در این راهنمای جامع که حاصل تجربیات میدانی کارشناسان ارشد <strong>{project.Name}</strong> است، کلیه جزئیات فنی، راهکارهای اصولی عیب‌یابی و پیش‌گیری از هزینه‌های اضافی را به تفصیل تشریح خواهیم کرد.");
+        sb.AppendLine($"    انتخاب مطمئن و اصولی در حوزه <strong>{project.Industry}</strong> {locationSuffix} نیازمند شناخت دقیق مشخصات فنی، استانداردهای کیفی و میزان پشتیبانی و ضمانت تولیدکننده یا ارائه‌دهنده است. در این راهنمای جامع که متناسب با تجربیات تخصصی <strong>{project.Name}</strong> تهیه شده، مهم‌ترین معیارهای فنی، مقایسه گزینه‌های بازار، عوامل موثر بر قیمت و پاسخ به پرسش‌های پرتکرار خریداران به تفصیل بررسی می‌شوند.");
         sb.AppendLine($"  </p>");
 
         // 2. Table of Contents
@@ -59,59 +63,53 @@ public sealed class AiArticleWriter : IAiArticleWriter
         sb.AppendLine($"    <h4 style=\"margin-top: 0; margin-bottom: 14px; font-weight: 800; color: #0f172a; font-size: 17px;\">📑 فهرست عناوین و سرفصل‌های این مقاله تخصصی</h4>");
         sb.AppendLine($"    <ul style=\"margin-bottom: 0; padding-right: 22px; font-size: 14px; line-height: 2.2;\">");
         sb.AppendLine($"      <li>۱. مفاهیم پایه، اهمیت و استانداردهای روز در {keyword}</li>");
-        sb.AppendLine($"      <li>۲. شایع‌ترین علائم خرابی و خطاهای رایج که نیاز به اقدام فوری دارند</li>");
-        sb.AppendLine($"      <li>۳. مقایسه تخصصی قطعات اصلی اورجینال در برابر نمونه‌های غیراستاندارد بازار</li>");
-        sb.AppendLine($"      <li>۴. جدول تفکیکی برآورد هزینه‌ها و عوامل موثر بر قیمت‌گذاری در سال ۱۴۰۵</li>");
-        sb.AppendLine($"      <li>۵. مراحل ۵‌گانه عیب‌یابی و اجرای اصولی توسط تکنسین‌های مجرب در تبریز</li>");
-        sb.AppendLine($"      <li>۶. سوالات متداول متقاضیان (FAQ) همراه با پاسخ‌های کارشناسی</li>");
-        sb.AppendLine($"      <li>۷. نتیجه‌گیری، گارانتی شرکتی و نحوه ثبت سفارش فوری</li>");
+        sb.AppendLine($"      <li>۲. نکات کلیدی کنترل کیفیت و معیارهای انتخاب حرفه‌ای</li>");
+        sb.AppendLine($"      <li>۳. مقایسه کیفیت ساخت و خدمات استاندارد در برابر نمونه‌های متفرقه بازار</li>");
+        sb.AppendLine($"      <li>۴. جدول برآورد هزینه‌ها و سطوح خدمات در سال ۱۴۰۵</li>");
+        sb.AppendLine($"      <li>۵. سوالات متداول متقاضیان (FAQ) همراه با پاسخ‌های کارشناسی</li>");
         sb.AppendLine($"    </ul>");
         sb.AppendLine($"  </div>");
 
         // 3. Section 1: Core Fundamentals
         sb.AppendLine($"  <h2 style=\"color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 35px; font-size: 21px;\">۱. مفاهیم پایه، اهمیت و استانداردهای روز در {keyword}</h2>");
         sb.AppendLine($"  <p style=\"font-size: 15px; text-align: justify;\">");
-        sb.AppendLine($"    برای درک صحیح عملکرد و پیشگیری از تحمیل خسارات سنگین‌تر، شناخت سازوکار فنی سیستم از اهمیت بنیادین برخوردار است. تجربه صدها پروژه موفق در تبریز ثابت کرده که بخش عمده‌ای از خرابی‌های ناگهانی، ناشی از نوسانات، استهلاک حرارتی و عدم سرویس‌های دوره‌ای منظم است. رعایت استانداردهای مهندسی نه‌تنها طول عمر مفید دستگاه را تا چند برابر ارتقا می‌دهد، بلکه مصرف انرژی و ریسک ازکارافتادگی کلی را به حداقل ممکن می‌رساند.");
+        sb.AppendLine($"    درک سازوکار فنی و شاخص‌های کیفی در حوزه <strong>{project.Industry}</strong> باعث می‌شود تصمیم‌گیری خرید یا سفارش بر مبنای داده‌های مهندسی انجام شود و از تحمیل هزینه‌های پنهان و استهلاک زودرس جلوگیری گردد.");
         sb.AppendLine($"  </p>");
 
         // 4. Expert Callout Box
         sb.AppendLine($"  <div style=\"background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 18px; margin: 24px 0;\">");
-        sb.AppendLine($"    <h5 style=\"color: #065f46; font-weight: 800; margin-top: 0; margin-bottom: 8px; font-size: 15px;\">💡 نکته طلایی از زبان سرپرست فنی شرکت راهکار الکترونیک سهند:</h5>");
+        sb.AppendLine($"    <h5 style=\"color: #065f46; font-weight: 800; margin-top: 0; margin-bottom: 8px; font-size: 15px;\">💡 توصیه فنی تیم تخصصی {project.Name}:</h5>");
         sb.AppendLine($"    <p style=\"margin-bottom: 0; font-size: 13.5px; color: #047857;\">");
-        sb.AppendLine($"      «همواره توصیه می‌شود با مشاهده اولین نشانه‌های ناپایداری یا تغییر در کارکرد عادی، از دستکاری خودسرانه یا سپردن کار به افراد فاقد صلاحیت فنی خودداری فرمایید. تشخیص زودهنگام توسط ابزارهای تستر پیشرفته، هزینه نهایی خدمات را تا بیش از ۶۰ درصد کاهش می‌دهد.»");
+        sb.AppendLine($"      «پیش از نهایی کردن انتخاب خود در موضوع «{keyword}»، حتماً کیفیت ساخت، اصالت قطعات یا متریال مصرفی، شفافیت قیمت‌گذاری و پشتیبانی رسمی {project.Name} را با معیارهای استاندارد مقایسه نمایید.»");
         sb.AppendLine($"    </p>");
         sb.AppendLine($"  </div>");
 
-        // 5. Section 2: Symptoms & Diagnostics
-        sb.AppendLine($"  <h2 style=\"color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 35px; font-size: 21px;\">۲. شایع‌ترین علائم و خطاهای رایج که نیاز به بررسی فوری دارند</h2>");
-        sb.AppendLine($"  <p style=\"font-size: 15px; text-align: justify;\">");
-        sb.AppendLine($"    بر اساس تحلیل آماری مراجعات کاربران در منطقه شمال‌غرب، ۵ نشانه بارز زیر از پرتکرارترین مواردی هستند که نیازمند اعزام کارشناس یا مراجعه به مرکز مجاز می‌باشند:");
-        sb.AppendLine($"  </p>");
+        // 5. Section 2: Key Evaluation Criteria
+        sb.AppendLine($"  <h2 style=\"color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 35px; font-size: 21px;\">۲. معیارهای کلیدی ارزیابی کیفیت و عملکرد در {keyword}</h2>");
         sb.AppendLine($"  <ul style=\"font-size: 14.5px; line-height: 2.1; padding-right: 22px;\">");
-        sb.AppendLine($"    <li><strong>چشمک زدن چراغ وضعیت یا ریستارت‌های مکرر:</strong> بیانگر اختلال در مدار تغذیه، نوسانات ورودی یا پروتکشن امنیتی مدار است.</li>");
-        sb.AppendLine($"    <li><strong>افت کیفیت، تیرگی موضعی یا خطوط غیرعادی:</strong> از نشانه‌های فرسودگی المان‌های فعال و لزوم بازرسی فوری پنل و بورد.</li>");
-        sb.AppendLine($"    <li><strong>ایجاد حرارت غیرعادی یا صدای وزوز ضعیف:</strong> ناشی از تضعیف خازن‌های صافی یا مسدود شدن مسیرهای خنک‌کننده طبیعی.</li>");
-        sb.AppendLine($"    <li><strong>تاخیر در پاسخ‌دهی و هنگ کردن سیستم:</strong> لزوم آپدیت نرم‌افزاری، فلش فریمور یا رفع اتصالی‌های جزیی برد اصلی.</li>");
+        sb.AppendLine($"    <li><strong>دقت فنی و استاندارد ساخت:</strong> انطباق با استانداردهای صنعتی و تداوم عملکرد زیر بار کاری مداوم.</li>");
+        sb.AppendLine($"    <li><strong>تامین قطعات و خدمات پس از فروش:</strong> دسترسی مطمئن به پشتیبانی فنی و قطعات مصرفی اصلی.</li>");
+        sb.AppendLine($"    <li><strong>صرفه اقتصادی در بلندمدت:</strong> کاهش هزینه‌های نگهداری و افزایش بهره‌وری عملیاتی.</li>");
+        sb.AppendLine($"    <li><strong>ضمانت‌نامه معتبر:</strong> برخورداری از گارانتی شفاف و پاسخگویی مستمر مجموعه {project.Name}.</li>");
         sb.AppendLine($"  </ul>");
 
         // 6. Section 3: Pricing Table
-        sb.AppendLine($"  <h2 style=\"color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 35px; font-size: 21px;\">۳. جدول برآورد هزینه‌ها و تعرفه خدمات در سال ۱۴۰۵</h2>");
-        sb.AppendLine($"  <p style=\"font-size: 14.5px;\">تعرفه‌های مصوب زیر بر مبنای نرخ‌نامه رسمی اتحادیه و با احتساب قطعات اصل شرکتی و گارانتی کتبی تنظیم شده است:</p>");
+        sb.AppendLine($"  <h2 style=\"color: #0f172a; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; margin-top: 35px; font-size: 21px;\">۳. جدول برآورد هزینه‌ها و پکیج‌های تخصصی {project.Name}</h2>");
+        sb.AppendLine($"  <p style=\"font-size: 14.5px;\">جدول زیر چارچوب شفاف مقایسه سطوح خدمات و پشتیبانی در حوزه <strong>{project.Industry}</strong> را نمایش می‌دهد:</p>");
         sb.AppendLine($"  <div style=\"overflow-x: auto; margin-bottom: 24px;\">");
         sb.AppendLine($"    <table style=\"width: 100%; border-collapse: collapse; font-size: 13.5px; text-align: right;\">");
         sb.AppendLine($"      <thead>");
         sb.AppendLine($"        <tr style=\"background: #0f172a; color: #ffffff;\">");
-        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">نوع خدمت / عملیات تخصصی</th>");
-        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">بازه هزینه تقریبی (تومان)</th>");
-        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">مدت زمان اجرا</th>");
-        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">مدت گارانتی رسمی</th>");
+        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">بخش / سطح خدمات</th>");
+        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">شرح تخصصی</th>");
+        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">وضعیت برآورد</th>");
+        sb.AppendLine($"          <th style=\"padding: 10px 14px; border: 1px solid #cbd5e1;\">پشتیبانی و گارانتی</th>");
         sb.AppendLine($"        </tr>");
         sb.AppendLine($"      </thead>");
         sb.AppendLine($"      <tbody>");
-        sb.AppendLine($"        <tr style=\"background: #ffffff;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">عیب‌یابی تخصصی با تستر دیجیتال</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; color: #16a34a; font-weight: 700;\">رایگان در صورت انجام خدمات</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">۳۰ الی ۴۵ دقیقه</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">تضمین تست کامل</td></tr>");
-        sb.AppendLine($"        <tr style=\"background: #f8fafc;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">سرویس دوره‌ای و کالیبراسیون استاندارد</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">۴۵۰,۰۰۰ الی ۸۵۰,۰۰۰</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">۱ الی ۲ ساعت</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">۶ ماه ضمانت</td></tr>");
-        sb.AppendLine($"        <tr style=\"background: #ffffff;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">تعویض ماژول‌ها و قطعات اصلی با گارانتی</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">طبق فاکتور رسمی قطعه</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">همان روز</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">۱۲ ماه تعویض بی‌قیدوشرط</td></tr>");
-        sb.AppendLine($"        <tr style=\"background: #f8fafc;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">اعزام تکنسین فوری در کلیه مناطق تبریز</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">تحت پوشش سراسری</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">کمتر از ۱ ساعت</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">پشتیبانی شرکتی</td></tr>");
+        sb.AppendLine($"        <tr style=\"background: #ffffff;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">مشاوره فنی و امکان‌سنجی {keyword}</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">بررسی نیاز تخصصی مشتری و پیشنهاد مدل بهینه</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; color: #16a34a; font-weight: 700;\">رایگان</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">کارشناسی مستقیم</td></tr>");
+        sb.AppendLine($"        <tr style=\"background: #f8fafc;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">پکیج استاندارد {project.Name}</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">ارائه کامل محصول/خدمت با تجهیزات و قطعات اصلی</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">بر اساس استعلام روز</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">گارانتی معتبر شرکتی</td></tr>");
+        sb.AppendLine($"        <tr style=\"background: #ffffff;\"><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: 700;\">پشتیبانی و خدمات پس از فروش</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">آموزش، راه‌اندازی و تامین قطعات مصرفی</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">پشتیبانی سراسری</td><td style=\"padding: 10px 14px; border: 1px solid #e2e8f0;\">تضمین تامین قطعات</td></tr>");
         sb.AppendLine($"      </tbody>");
         sb.AppendLine($"    </table>");
         sb.AppendLine($"  </div>");
@@ -122,10 +120,10 @@ public sealed class AiArticleWriter : IAiArticleWriter
 
         var faqs = new List<(string q, string a)>
         {
-            ($"آیا خدمات {keyword} در محل مشتری در تبریز انجام می‌شود؟", $"بله، تمامی تکنسین‌های {project.Name} مجهز به کیف ابزار تخصصی و قطعات پرمصرف بوده و خدمات در محل مشتری در سرتاسر تبریز و حومه انجام می‌پذیرد."),
-            ($"مدت زمان گارانتی شرکتی برای قطعات تعویض‌شده چقدر است؟", $"کلیه قطعات اورجینال تامین‌شده دارای ۶ الی ۱۲ ماه ضمانت کتبی شرکتی با هولوگرام معتبر سهند می‌باشند."),
-            ($"هزینه ایاب‌وذهاب و کارشناسی در مناطق مختلف تبریز چگونه محاسبه می‌شود؟", $"در صورت انجام خدمت، هزینه کارشناسی و عیب‌یابی کاملاً رایگان بوده و تعرفه کلیه مناطق تبریز یکسان محاسبه می‌شود."),
-            ($"چگونه می‌توان سفارش خدمات فوری را ثبت کرد؟", $"کافیست با شماره تماس مستقیم ۰۴۱-۳۳۳۶۰۸۵۲ یا همراه سرپرست فنی ۰۹۳۶۷۷۶۴۱۴۶ تماس حاصل فرمایید تا در کمتر از ۴۵ دقیقه هماهنگی لازم صورت گیرد.")
+            ($"مهم‌ترین مزیت انتخاب {project.Name} برای {keyword} چیست؟", $"تمرکز تخصصی در حوزه «{project.Industry}»، ارائه مشاوره مهندسی شفاف پیش از سفارش و پشتیبانی معتبر پس از تحویل از مزایای کلیدی {project.Name} است."),
+            ($"شرایط گارانتی و پشتیبانی در {project.Domain} چگونه ارائه می‌شود؟", $"تمامی خدمات و محصولات اصلی {project.Name} با ضمانت کتبی معتبر و پشتیبانی مستمر جهت اطمینان خاطر کارفرمایان ارائه می‌گردند."),
+            ($"چگونه می‌توان استعلام قیمت روز و مشاوره {keyword} دریافت کرد؟", $"می‌توانید از طریق وب‌سایت رسمی https://{project.Domain} یا تماس مستقیم با واحد پشتیبانی اطلاعات دقیق فنی و قیمت روز را دریافت نمایید."),
+            ($"آیا ارسال و پشتیبانی برای مشتریان خارج از شهر نیز انجام می‌شود؟", $"بله، خدمات مشاوره، تامین و پشتیبانی {project.Name} برای مشتریان در سراسر کشور قابل ارائه است.")
         };
 
         foreach (var (q, a) in faqs)

@@ -36,6 +36,9 @@ public sealed class GscPeriodSummary
     public long TotalImpressions { get; set; }
     public double AverageCtr { get; set; }
     public double AveragePosition { get; set; }
+    public bool IsLiveData { get; set; }
+    public string DataSource { get; set; } = "CalibratedFallback";
+    public string? ResolvedPropertyUrl { get; set; }
 
     public List<GscDimensionAggregate> TopQueries { get; set; } = new();
     public List<GscDimensionAggregate> TopPages { get; set; } = new();

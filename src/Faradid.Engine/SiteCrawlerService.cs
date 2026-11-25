@@ -102,10 +102,14 @@ public sealed class SiteCrawlerService : ISiteCrawlerService
             _logger.LogError(ex, "Unexpected error crawling domain {Domain}", domain);
         }
 
-        // If crawl had 0 successful findings (e.g. offline/isolated environment), generate diagnostic baseline
-        if (findings.Count == 0 || findings.All(f => f.StatusCode == 0))
+        if (findings.Count == 0)
         {
-            findings = GenerateDiagnosticFindings(project, baseUrl);
+            findings.Add(new CrawlUrlFinding
+            {
+                Url = baseUrl,
+                StatusCode = 0,
+                Issues = new List<string> { "خزشگر نتوانست هیچ آدرسی را بررسی کند." }
+            });
         }
 
         var result = new SiteCrawlResult
@@ -276,84 +280,6 @@ public sealed class SiteCrawlerService : ISiteCrawlerService
                 queue.Enqueue(cleanUrl);
             }
         }
-    }
-
-    private List<CrawlUrlFinding> GenerateDiagnosticFindings(ProjectProfile project, string baseUrl)
-    {
-        var domain = project.Domain;
-        return new List<CrawlUrlFinding>
-        {
-            new CrawlUrlFinding
-            {
-                Url = $"{baseUrl}/",
-                StatusCode = 200,
-                Title = $"{project.Name} | مرکز تخصصی {project.Industry} در تبریز",
-                MetaDescription = $"ارائه خدمات حرفه‌ای {project.Industry} با ضمانت کتبی شرکتی و پشتیبانی تخصصی در تبریز توسط مهندسان شرکت سهند.",
-                H1Count = 1,
-                TotalImagesCount = 6,
-                MissingAltImagesCount = 1,
-                HasCanonical = true,
-                CanonicalUrl = $"{baseUrl}/",
-                ResponseTimeMs = 320,
-                Issues = new List<string> { "۱ تصویر در صفحه اصلی فاقد ویژگی Alt است." }
-            },
-            new CrawlUrlFinding
-            {
-                Url = $"{baseUrl}/services",
-                StatusCode = 200,
-                Title = $"خدمات و تعرفه‌ها | {project.Name}",
-                MetaDescription = $"لیست کامل خدمات، قیمت مصوب و گارانتی خدمات {project.Industry} در شهر تبریز و آذربایجان شرقی.",
-                H1Count = 1,
-                TotalImagesCount = 4,
-                MissingAltImagesCount = 0,
-                HasCanonical = true,
-                CanonicalUrl = $"{baseUrl}/services",
-                ResponseTimeMs = 280,
-                Issues = new List<string>()
-            },
-            new CrawlUrlFinding
-            {
-                Url = $"{baseUrl}/about-us",
-                StatusCode = 200,
-                Title = $"درباره ما و سوابق شرکت | {project.Name}",
-                MetaDescription = $"معرفی تاریخچه، مجوزها، تیم فنی و رسالت شرکت راهکار الکترونیک سهند در تبریز.",
-                H1Count = 1,
-                TotalImagesCount = 3,
-                MissingAltImagesCount = 0,
-                HasCanonical = true,
-                CanonicalUrl = $"{baseUrl}/about-us",
-                ResponseTimeMs = 240,
-                Issues = new List<string>()
-            },
-            new CrawlUrlFinding
-            {
-                Url = $"{baseUrl}/contact",
-                StatusCode = 200,
-                Title = $"تماس با ما و آدرس شعب تبریز | {project.Name}",
-                MetaDescription = $"اطلاعات تماس، تلفن ثابت ۰۴۱-۳۳۳۶۰۸۵۲، شماره همراه و آدرس دفاتر در تبریز.",
-                H1Count = 1,
-                TotalImagesCount = 2,
-                MissingAltImagesCount = 0,
-                HasCanonical = true,
-                CanonicalUrl = $"{baseUrl}/contact",
-                ResponseTimeMs = 210,
-                Issues = new List<string>()
-            },
-            new CrawlUrlFinding
-            {
-                Url = $"{baseUrl}/blog",
-                StatusCode = 200,
-                Title = $"مقالات و راهنمای تخصصی {project.Industry}",
-                MetaDescription = "",
-                H1Count = 2,
-                TotalImagesCount = 8,
-                MissingAltImagesCount = 2,
-                HasCanonical = false,
-                CanonicalUrl = null,
-                ResponseTimeMs = 390,
-                Issues = new List<string> { "تگ توضیحات متا (Meta Description) تعریف نشده است.", "صفحه دارای ۲ تگ H1 است.", "تگ کنونیکال مشخص نشده است." }
-            }
-        };
     }
 
     private async Task SaveResultAsync(SiteCrawlResult result, CancellationToken ct)

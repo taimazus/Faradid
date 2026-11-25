@@ -121,4 +121,47 @@ public sealed class AdvancedPhasesTests
         var mapsPackKws = summary.Keywords.Where(k => k.IsInGoogleMapsPack).ToList();
         Assert.NotEmpty(mapsPackKws);
     }
+
+    [Fact]
+    public async Task LocalRankTracker_YonarakCom_NeverShowsHoneyOrRopeAccess_EvenWithLegacyCache()
+    {
+        var yonarakCom = new ProjectProfile
+        {
+            Id = Guid.NewGuid(),
+            Name = "یونارک",
+            Domain = "yonarak.com",
+            ClientName = "تولیدی صنعتی یونارک",
+            Industry = "اولین تولیدکننده دیسک تراش در ایران"
+        };
+
+        var cacheDir = Path.Combine(AppContext.BaseDirectory, "App_Data", "local_ranks");
+        Directory.CreateDirectory(cacheDir);
+        var cacheFile = Path.Combine(cacheDir, $"{yonarakCom.Id}.json");
+
+        try
+        {
+            // Simulate poisoned legacy cache on disk
+            await File.WriteAllTextAsync(cacheFile, """
+                {
+                  "ProjectId": "%ID%",
+                  "Domain": "yonarak.com",
+                  "City": "تبریز",
+                  "Keywords": [
+                    { "Keyword": "خرید عسل طبیعی تبریز", "CurrentRank": 2.2 },
+                    { "Keyword": "سوغات آذربایجان و تبریز", "CurrentRank": 3.0 }
+                  ]
+                }
+                """.Replace("%ID%", yonarakCom.Id.ToString()));
+
+            var tracker = new LocalRankTrackerService(NullLogger<LocalRankTrackerService>.Instance);
+            var summary = await tracker.GetOrUpdateLocalRanksAsync(yonarakCom);
+
+            Assert.DoesNotContain(summary.Keywords, k => k.Keyword.Contains("عسل") || k.Keyword.Contains("سوغات") || k.Keyword.Contains("کفسابی"));
+            Assert.Contains(summary.Keywords, k => k.Keyword.Contains("دیسک تراش") || k.Keyword.Contains("یونارک"));
+        }
+        finally
+        {
+            if (File.Exists(cacheFile)) File.Delete(cacheFile);
+        }
+    }
 }

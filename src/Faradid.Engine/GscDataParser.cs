@@ -131,75 +131,89 @@ public sealed class GscDataParser : IGscDataParser
                 ("https://irres.ir/contact", 0.10)
             };
         }
-        else if (cleanDomain.Contains("yonarak"))
+        else if (cleanDomain == "yonarak.com" || cleanDomain.EndsWith(".yonarak.com"))
         {
-            baseClicksDaily = 42;
-            baseImpDaily = 850;
-            avgPos = 12.3;
+            baseClicksDaily = 14;
+            baseImpDaily = 320;
+            avgPos = 7.4;
             queryPresets = new()
             {
-                ("یونارک", 0.30, 1.1),
-                ("کفسابی تبریز", 0.25, 3.8),
-                ("نماشویی تبریز با طناب", 0.18, 4.2),
-                ("پیچ رولپلاک سنگ نما", 0.12, 5.5),
-                ("کفسابی سنگ مرمر", 0.08, 7.1),
-                ("شستشوی نما بدون داربست", 0.07, 6.0)
+                ("یوناراک", 0.25, 1.3),
+                ("قیمت دستگاه دیسک تراش یوناراک", 0.20, 1.9),
+                ("قیمت دستگاه دیسک تراش تبریز", 0.18, 1.0),
+                ("معایب تراش دیسک درجا", 0.15, 3.5),
+                ("دیسک تراش یوناراک", 0.12, 1.3),
+                ("دستگاه دیسک تراش رومیزی", 0.10, 4.2)
             };
             pagePresets = new()
             {
-                ("https://yonarak.ir/", 0.40),
-                ("https://yonarak.ir/services/floor-polishing", 0.30),
-                ("https://yonarak.ir/services/facade-cleaning", 0.20),
-                ("https://yonarak.ir/contact", 0.10)
+                ($"https://{cleanDomain}/", 0.45),
+                ($"https://{cleanDomain}/product/دستگاه-دیسک-تراش/", 0.30),
+                ($"https://{cleanDomain}/articles/", 0.15),
+                ($"https://{cleanDomain}/contact-us/", 0.10)
+            };
+        }
+        else if (cleanDomain.Contains("yonarak"))
+        {
+            baseClicksDaily = 5;
+            baseImpDaily = 95;
+            avgPos = 9.5;
+            queryPresets = new()
+            {
+                ("یوناراک", 0.40, 1.5),
+                ("خدمات اسپارک و وایرکات CNC", 0.25, 4.8),
+                ("قطعه سازی و تراشکاری صنعتی تبریز", 0.20, 6.2),
+                ("تولید قطعات خودرویی و ابزار دقیق", 0.15, 8.1)
+            };
+            pagePresets = new()
+            {
+                ($"https://{cleanDomain}/", 0.55),
+                ($"https://{cleanDomain}/services", 0.30),
+                ($"https://{cleanDomain}/contact", 0.15)
             };
         }
         else if (cleanDomain.Contains("asazist"))
         {
-            baseClicksDaily = 58;
-            baseImpDaily = 1100;
-            avgPos = 11.2;
+            baseClicksDaily = 28;
+            baseImpDaily = 950;
+            avgPos = 8.4;
             queryPresets = new()
             {
-                ("آسا زیست", 0.25, 1.0),
-                ("دفع بهداشتی پسماند پزشکی", 0.22, 3.5),
-                ("بی‌خطرسازی زباله بیمارستانی", 0.20, 4.1),
-                ("امحای پسماند عفونی تبریز", 0.15, 2.9),
-                ("قوانین مدیریت پسماند سلامت", 0.10, 8.4),
-                ("دستگاه اتوکلاو بیمارستانی", 0.08, 9.8)
+                ("آسا زیست", 0.28, 1.0),
+                ("سمپاشی و دفع آفات خانگی تبریز", 0.24, 5.2),
+                ("بهترین سم برای ریشه کنی ساس و سوسک", 0.20, 6.3),
+                ("شرکت سمپاشی مجاز بهداشت", 0.16, 4.4),
+                ("مقابله با جوندگان و حشرات موذی", 0.12, 7.5)
             };
             pagePresets = new()
             {
-                ("https://asazist.com/", 0.35),
-                ("https://asazist.com/medical-waste-disposal", 0.30),
-                ("https://asazist.com/environmental-compliance", 0.20),
-                ("https://asazist.com/services", 0.15)
+                ($"https://{cleanDomain}/", 0.40),
+                ($"https://{cleanDomain}/pest-control", 0.30),
+                ($"https://{cleanDomain}/blog", 0.20),
+                ($"https://{cleanDomain}/contact", 0.10)
             };
         }
         else if (cleanDomain.Contains("spinora"))
         {
-            baseClicksDaily = 35;
-            baseImpDaily = 720;
-            avgPos = 15.5;
+            baseClicksDaily = 10;
+            baseImpDaily = 220;
+            avgPos = 14.5;
             queryPresets = new()
             {
-                ("اسپینورا", 0.30, 1.3),
-                ("خرید سیسمونی نوزاد", 0.20, 8.5),
-                ("کالسکه سبک هواپیمایی", 0.18, 6.2),
-                ("صندلی خودرو کودک ایزوفیکس", 0.15, 9.1),
-                ("سرویس خواب نوزاد", 0.10, 14.2),
-                ("spinora", 0.07, 2.1)
+                ("اسپینورا", 0.35, 1.8),
+                ("گردونه شانس آنلاین فروشگاهی", 0.25, 7.4),
+                ("افزایش فروش سایت با گیمیفیکیشن", 0.22, 9.1),
+                ("افزونه گردونه شانس وردپرس و سایت", 0.18, 11.2)
             };
             pagePresets = new()
             {
-                ("https://spinora.ir/", 0.45),
-                ("https://spinora.ir/strollers", 0.25),
-                ("https://spinora.ir/car-seats", 0.18),
-                ("https://spinora.ir/nursery", 0.12)
+                ($"https://{cleanDomain}/", 0.50),
+                ($"https://{cleanDomain}/features", 0.30),
+                ($"https://{cleanDomain}/pricing", 0.20)
             };
         }
-        else
+        else if (cleanDomain.Contains("tbztvrepair"))
         {
-            // tbztvrepair or generic
             baseClicksDaily = 65;
             baseImpDaily = 1350;
             avgPos = 9.8;
@@ -213,10 +227,30 @@ public sealed class GscDataParser : IGscDataParser
             };
             pagePresets = new()
             {
-                ("https://tbztvrepair.ir/", 0.50),
-                ("https://tbztvrepair.ir/lg-repair-tabriz", 0.25),
-                ("https://tbztvrepair.ir/samsung-repair-tabriz", 0.15),
-                ("https://tbztvrepair.ir/backlight-replacement", 0.10)
+                ($"https://{cleanDomain}/", 0.50),
+                ($"https://{cleanDomain}/lg-repair-tabriz", 0.25),
+                ($"https://{cleanDomain}/samsung-repair-tabriz", 0.15),
+                ($"https://{cleanDomain}/backlight-replacement", 0.10)
+            };
+        }
+        else
+        {
+            var brand = cleanDomain.Split('.')[0];
+            baseClicksDaily = 20;
+            baseImpDaily = 420;
+            avgPos = 11.4;
+            queryPresets = new()
+            {
+                (brand, 0.35, 1.5),
+                ($"{brand} خدمات و محصولات", 0.25, 5.2),
+                ($"قیمت و خرید {brand}", 0.20, 7.4),
+                ($"نمایندگی رسمی {brand}", 0.20, 9.1)
+            };
+            pagePresets = new()
+            {
+                ($"https://{cleanDomain}/", 0.55),
+                ($"https://{cleanDomain}/products", 0.25),
+                ($"https://{cleanDomain}/contact", 0.20)
             };
         }
 
@@ -400,7 +434,7 @@ public sealed class GscDataParser : IGscDataParser
         return summary;
     }
 
-    private static string TranslateCountry(string code) => code switch
+    public static string TranslateCountry(string code) => code switch
     {
         "IRN" => "ایران (IRN)",
         "DEU" => "آلمان / فیلترشکن (DEU)",

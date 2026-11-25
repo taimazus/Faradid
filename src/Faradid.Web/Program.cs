@@ -58,7 +58,7 @@ builder.Services.AddScoped<IAiArticleWriter, AiArticleWriter>();
 
 // Phase 5 & 7: Lightweight Online Site Crawler & Tabriz Local SERP Tracker
 builder.Services.AddHttpClient<ISiteCrawlerService, SiteCrawlerService>();
-builder.Services.AddSingleton<ILocalRankTrackerService, LocalRankTrackerService>();
+builder.Services.AddScoped<ILocalRankTrackerService, LocalRankTrackerService>();
 
 var app = builder.Build();
 

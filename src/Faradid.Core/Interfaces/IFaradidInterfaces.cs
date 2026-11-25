@@ -100,6 +100,8 @@ public interface ISiteCrawlerService
 public interface ILocalRankTrackerService
 {
     Task<LocalRankTrackingSummary> GetOrUpdateLocalRanksAsync(ProjectProfile project, CancellationToken ct = default);
+    Task<LocalRankTrackingSummary> RefreshLocalRanksAsync(ProjectProfile project, CancellationToken ct = default);
     Task<LocalRankTrackingSummary?> GetLocalRanksAsync(Guid projectId, CancellationToken ct = default);
-    Task AddCustomKeywordAsync(Guid projectId, string keyword, string city = "تبریز", CancellationToken ct = default);
+    Task AddCustomKeywordAsync(Guid projectId, string keyword, string city = "ایران", CancellationToken ct = default);
+    Task RemoveCustomKeywordAsync(Guid projectId, string keyword, CancellationToken ct = default);
 }

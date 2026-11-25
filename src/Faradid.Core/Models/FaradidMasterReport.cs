@@ -16,6 +16,8 @@ public sealed class FaradidMasterReport
 
     public ComparativeMetrics Comparative { get; set; } = new();
     public CodebaseAuditResult? CodeAudit { get; set; }
+    public SiteCrawlResult? CrawlResult { get; set; }
+    public LocalRankTrackingSummary? LocalRanks { get; set; }
     public CompetitorBenchmarkReport Competitors { get; set; } = new();
     public AiStrategicReport AiSynthesis { get; set; } = new();
 
